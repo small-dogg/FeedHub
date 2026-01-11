@@ -1,0 +1,16 @@
+spring:
+  application:
+    name: feed-hub-api
+  datasource:
+    url: jdbc:postgresql://jerry.world:32222/product
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+server:
+  port: 8080
