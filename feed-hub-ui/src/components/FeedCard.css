@@ -1,0 +1,81 @@
+.feed-card {
+  background: #ffffff;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 12px;
+  transition: box-shadow 0.2s ease;
+}
+
+.feed-card:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.feed-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  font-size: 0.85rem;
+}
+
+.feed-blog-name {
+  color: #1976d2;
+  font-weight: 500;
+}
+
+.feed-date {
+  color: #888;
+}
+
+.feed-title {
+  margin: 0 0 12px 0;
+  font-size: 1.1rem;
+  line-height: 1.4;
+}
+
+.feed-title a {
+  color: #333;
+  text-decoration: none;
+}
+
+.feed-title a:hover {
+  color: #1976d2;
+  text-decoration: underline;
+}
+
+.feed-card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.85rem;
+}
+
+.feed-author {
+  color: #666;
+}
+
+.feed-link {
+  color: #1976d2;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.feed-link:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 600px) {
+  .feed-card {
+    padding: 12px;
+  }
+
+  .feed-title {
+    font-size: 1rem;
+  }
+
+  .feed-card-header,
+  .feed-card-footer {
+    font-size: 0.8rem;
+  }
+}

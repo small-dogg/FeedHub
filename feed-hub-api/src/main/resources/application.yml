@@ -2,15 +2,13 @@ spring:
   application:
     name: feed-hub-api
   datasource:
-    url: jdbc:postgresql://jerry.world:32222/product
+    url: jdbc:postgresql://jerry.world:32222/feed_hub
     driver-class-name: org.postgresql.Driver
+    username: test
+    password: test
   jpa:
     hibernate:
-      ddl-auto: validate
+      ddl-auto: none
     open-in-view: false
-  flyway:
-    enabled: true
-    locations: classpath:db/migration
-
 server:
   port: 8080
