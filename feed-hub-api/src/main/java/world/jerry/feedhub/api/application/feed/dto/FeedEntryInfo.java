@@ -1,8 +1,11 @@
 package world.jerry.feedhub.api.application.feed.dto;
 
 import world.jerry.feedhub.api.domain.feed.FeedEntry;
+import world.jerry.feedhub.api.domain.tag.Tag;
 
 import java.time.Instant;
+import java.util.List;
+import java.util.Set;
 
 public record FeedEntryInfo(
         Long id,
@@ -12,9 +15,13 @@ public record FeedEntryInfo(
         String link,
         String description,
         String author,
-        Instant publishedAt
+        Instant publishedAt,
+        List<TagSummary> tags
 ) {
-    public static FeedEntryInfo from(FeedEntry entry, String blogName) {
+    public static FeedEntryInfo from(FeedEntry entry, String blogName, Set<Tag> tags) {
+        List<TagSummary> tagSummaries = tags != null
+                ? tags.stream().map(TagSummary::from).toList()
+                : List.of();
         return new FeedEntryInfo(
                 entry.getId(),
                 entry.getRssInfoId(),
@@ -23,7 +30,14 @@ public record FeedEntryInfo(
                 entry.getLink(),
                 entry.getDescription(),
                 entry.getAuthor(),
-                entry.getPublishedAt()
+                entry.getPublishedAt(),
+                tagSummaries
         );
+    }
+
+    public record TagSummary(Long id, String name) {
+        public static TagSummary from(Tag tag) {
+            return new TagSummary(tag.getId(), tag.getName());
+        }
     }
 }

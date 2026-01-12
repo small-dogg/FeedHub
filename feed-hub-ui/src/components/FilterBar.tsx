@@ -4,14 +4,24 @@ import { rssSourceApi, tagApi } from '../api/client';
 import './FilterBar.css';
 
 interface FilterBarProps {
-  onSearch: (rssSourceIds: number[], tagIds: number[]) => void;
+  selectedRssSources: number[];
+  selectedTags: number[];
+  onRssSourceToggle: (id: number) => void;
+  onTagToggle: (id: number) => void;
+  onSearch: () => void;
+  onReset: () => void;
 }
 
-export function FilterBar({ onSearch }: FilterBarProps) {
+export function FilterBar({
+  selectedRssSources,
+  selectedTags,
+  onRssSourceToggle,
+  onTagToggle,
+  onSearch,
+  onReset,
+}: FilterBarProps) {
   const [rssSources, setRssSources] = useState<RssSource[]>([]);
   const [tags, setTags] = useState<Tag[]>([]);
-  const [selectedRssSources, setSelectedRssSources] = useState<number[]>([]);
-  const [selectedTags, setSelectedTags] = useState<number[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -32,28 +42,6 @@ export function FilterBar({ onSearch }: FilterBarProps) {
     fetchData();
   }, []);
 
-  const handleRssSourceToggle = (id: number) => {
-    setSelectedRssSources((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
-    );
-  };
-
-  const handleTagToggle = (id: number) => {
-    setSelectedTags((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
-    );
-  };
-
-  const handleSearch = () => {
-    onSearch(selectedRssSources, selectedTags);
-  };
-
-  const handleReset = () => {
-    setSelectedRssSources([]);
-    setSelectedTags([]);
-    onSearch([], []);
-  };
-
   if (loading) {
     return <div className="filter-bar filter-loading">필터 로딩 중...</div>;
   }
@@ -70,7 +58,7 @@ export function FilterBar({ onSearch }: FilterBarProps) {
               <button
                 key={source.id}
                 className={`filter-chip ${selectedRssSources.includes(source.id) ? 'active' : ''}`}
-                onClick={() => handleRssSourceToggle(source.id)}
+                onClick={() => onRssSourceToggle(source.id)}
               >
                 {source.blogName}
               </button>
@@ -89,7 +77,7 @@ export function FilterBar({ onSearch }: FilterBarProps) {
               <button
                 key={tag.id}
                 className={`filter-chip ${selectedTags.includes(tag.id) ? 'active' : ''}`}
-                onClick={() => handleTagToggle(tag.id)}
+                onClick={() => onTagToggle(tag.id)}
               >
                 #{tag.name}
               </button>
@@ -99,10 +87,10 @@ export function FilterBar({ onSearch }: FilterBarProps) {
       </div>
 
       <div className="filter-actions">
-        <button className="btn btn-secondary" onClick={handleReset}>
+        <button className="btn btn-secondary" onClick={onReset}>
           초기화
         </button>
-        <button className="btn btn-primary" onClick={handleSearch}>
+        <button className="btn btn-primary" onClick={onSearch}>
           검색
         </button>
       </div>

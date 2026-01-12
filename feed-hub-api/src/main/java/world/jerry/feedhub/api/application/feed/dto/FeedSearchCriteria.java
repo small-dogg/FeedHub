@@ -1,11 +1,13 @@
 package world.jerry.feedhub.api.application.feed.dto;
 
+import java.time.Instant;
 import java.util.List;
 
 public record FeedSearchCriteria(
         List<Long> rssInfoIds,
         List<Long> tagIds,
         Long lastId,
+        Instant lastPublishedAt,
         int size
 ) {
     public FeedSearchCriteria {

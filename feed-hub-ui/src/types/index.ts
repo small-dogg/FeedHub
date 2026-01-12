@@ -27,11 +27,13 @@ export interface FeedEntry {
   description: string | null;
   author: string | null;
   publishedAt: string | null;
+  tags: { id: number; name: string }[];
 }
 
 export interface FeedSlice {
   content: FeedEntry[];
   lastId: number | null;
+  lastPublishedAt: string | null;
   hasMore: boolean;
 }
 
@@ -39,6 +41,7 @@ export interface FeedSearchParams {
   rssSourceIds?: number[];
   tagIds?: number[];
   lastId?: number;
+  lastPublishedAt?: string;
   size?: number;
 }
 

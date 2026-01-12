@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import type { RssSource, Tag } from '../types';
 import { rssSourceApi, tagApi } from '../api/client';
 import './AdminModal.css';
@@ -15,6 +15,8 @@ export function AdminModal({ isOpen, onClose }: AdminModalProps) {
   const [loading, setLoading] = useState(false);
   const [syncingId, setSyncingId] = useState<number | null>(null);
   const [syncingAll, setSyncingAll] = useState(false);
+  const [importing, setImporting] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Form states
   const [newSource, setNewSource] = useState({
@@ -139,6 +141,31 @@ export function AdminModal({ isOpen, onClose }: AdminModalProps) {
     }
   };
 
+  const handleImportOpml = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setImporting(true);
+    try {
+      const result = await rssSourceApi.importOpml(file, true);
+      alert(
+        `OPML 가져오기 완료!\n` +
+        `- 발견: ${result.totalFound}개\n` +
+        `- 등록: ${result.imported}개\n` +
+        `- 건너뜀: ${result.skipped}개`
+      );
+      fetchData();
+    } catch (error) {
+      console.error('OPML 가져오기 실패:', error);
+      alert('OPML 파일 가져오기에 실패했습니다.');
+    } finally {
+      setImporting(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -171,6 +198,24 @@ export function AdminModal({ isOpen, onClose }: AdminModalProps) {
             <div className="modal-loading">로딩 중...</div>
           ) : activeTab === 'sources' ? (
             <div className="admin-section">
+              <div className="opml-import">
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  accept=".opml,.xml"
+                  onChange={handleImportOpml}
+                  style={{ display: 'none' }}
+                />
+                <button
+                  type="button"
+                  className="btn btn-opml"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={importing || syncingAll || syncingId !== null}
+                >
+                  {importing ? 'OPML 가져오는 중...' : 'OPML 파일로 가져오기'}
+                </button>
+              </div>
+
               <form className="admin-form" onSubmit={handleAddSource}>
                 <h4>새 RSS 소스 추가</h4>
                 <div className="form-row">

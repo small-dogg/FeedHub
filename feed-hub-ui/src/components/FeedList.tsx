@@ -5,9 +5,11 @@ import './FeedList.css';
 interface FeedListProps {
   feeds: FeedEntry[];
   loading: boolean;
+  onAddTag?: (feedId: number, rssSourceId: number) => void;
+  onTagClick?: (tagId: number) => void;
 }
 
-export function FeedList({ feeds, loading }: FeedListProps) {
+export function FeedList({ feeds, loading, onAddTag, onTagClick }: FeedListProps) {
   if (loading) {
     return (
       <div className="feed-list-loading">
@@ -28,7 +30,7 @@ export function FeedList({ feeds, loading }: FeedListProps) {
   return (
     <div className="feed-list">
       {feeds.map((feed) => (
-        <FeedCard key={feed.id} feed={feed} />
+        <FeedCard key={feed.id} feed={feed} onAddTag={onAddTag} onTagClick={onTagClick} />
       ))}
     </div>
   );

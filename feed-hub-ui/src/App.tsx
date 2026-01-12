@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { FeedList, FilterBar, AdminModal, AdminButton } from './components';
+import { FeedList, FilterBar, AdminModal, AdminButton, TagSelectModal } from './components';
 import { feedApi } from './api/client';
 import type { FeedEntry } from './types';
 import './App.css';
@@ -10,13 +10,20 @@ function App() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(false);
   const [lastId, setLastId] = useState<number | null>(null);
+  const [lastPublishedAt, setLastPublishedAt] = useState<string | null>(null);
   const [selectedRssSources, setSelectedRssSources] = useState<number[]>([]);
   const [selectedTags, setSelectedTags] = useState<number[]>([]);
   const [isAdminOpen, setIsAdminOpen] = useState(false);
 
+  // Tag modal state
+  const [isTagModalOpen, setIsTagModalOpen] = useState(false);
+  const [tagModalRssSourceId, setTagModalRssSourceId] = useState<number | null>(null);
+  const [tagModalCurrentTags, setTagModalCurrentTags] = useState<{ id: number; name: string }[]>([]);
+
   const fetchInitial = useCallback(async () => {
     setLoading(true);
     setLastId(null);
+    setLastPublishedAt(null);
     setHasMore(false);
 
     try {
@@ -28,6 +35,7 @@ function App() {
 
       setFeeds(data.content);
       setLastId(data.lastId);
+      setLastPublishedAt(data.lastPublishedAt);
       setHasMore(data.hasMore);
     } catch (error) {
       console.error('피드 로드 실패:', error);
@@ -46,11 +54,13 @@ function App() {
         rssSourceIds: selectedRssSources.length > 0 ? selectedRssSources : undefined,
         tagIds: selectedTags.length > 0 ? selectedTags : undefined,
         lastId: lastId,
+        lastPublishedAt: lastPublishedAt ?? undefined,
         size: 20,
       });
 
       setFeeds(prev => [...prev, ...data.content]);
       setLastId(data.lastId);
+      setLastPublishedAt(data.lastPublishedAt);
       setHasMore(data.hasMore);
     } catch (error) {
       console.error('피드 추가 로드 실패:', error);
@@ -63,9 +73,48 @@ function App() {
     fetchInitial();
   }, [fetchInitial]);
 
-  const handleSearch = (rssSourceIds: number[], tagIds: number[]) => {
-    setSelectedRssSources(rssSourceIds);
-    setSelectedTags(tagIds);
+  const handleRssSourceToggle = (id: number) => {
+    setSelectedRssSources((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    );
+  };
+
+  const handleTagToggle = (id: number) => {
+    setSelectedTags((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    );
+  };
+
+  const handleReset = () => {
+    setSelectedRssSources([]);
+    setSelectedTags([]);
+  };
+
+  const handleTagClick = (tagId: number) => {
+    // Set only this tag as selected and trigger search
+    setSelectedRssSources([]);
+    setSelectedTags([tagId]);
+  };
+
+  const handleAddTag = (_feedId: number, rssSourceId: number) => {
+    // Find current tags from feeds with same rssSourceId
+    const feedWithSource = feeds.find((f) => f.rssSource.id === rssSourceId);
+    const currentTags = feedWithSource?.tags || [];
+
+    setTagModalRssSourceId(rssSourceId);
+    setTagModalCurrentTags(currentTags);
+    setIsTagModalOpen(true);
+  };
+
+  const handleTagModalClose = () => {
+    setIsTagModalOpen(false);
+    setTagModalRssSourceId(null);
+    setTagModalCurrentTags([]);
+  };
+
+  const handleTagUpdate = () => {
+    // Refresh feeds to reflect updated tags
+    fetchInitial();
   };
 
   return (
@@ -76,9 +125,21 @@ function App() {
       </header>
 
       <main className="app-main">
-        <FilterBar onSearch={handleSearch} />
+        <FilterBar
+          selectedRssSources={selectedRssSources}
+          selectedTags={selectedTags}
+          onRssSourceToggle={handleRssSourceToggle}
+          onTagToggle={handleTagToggle}
+          onSearch={fetchInitial}
+          onReset={handleReset}
+        />
 
-        <FeedList feeds={feeds} loading={loading} />
+        <FeedList
+          feeds={feeds}
+          loading={loading}
+          onAddTag={handleAddTag}
+          onTagClick={handleTagClick}
+        />
 
         {/* Load more button */}
         {hasMore && (
@@ -96,6 +157,13 @@ function App() {
 
       <AdminButton onClick={() => setIsAdminOpen(true)} />
       <AdminModal isOpen={isAdminOpen} onClose={() => setIsAdminOpen(false)} />
+      <TagSelectModal
+        isOpen={isTagModalOpen}
+        rssSourceId={tagModalRssSourceId}
+        currentTags={tagModalCurrentTags}
+        onClose={handleTagModalClose}
+        onUpdate={handleTagUpdate}
+      />
     </div>
   );
 }

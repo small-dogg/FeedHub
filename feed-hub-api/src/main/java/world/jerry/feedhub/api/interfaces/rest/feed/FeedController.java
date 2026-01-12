@@ -8,6 +8,7 @@ import world.jerry.feedhub.api.application.feed.dto.FeedEntryPage;
 import world.jerry.feedhub.api.application.feed.dto.FeedSearchCriteria;
 import world.jerry.feedhub.api.interfaces.rest.feed.dto.FeedPageResponse;
 
+import java.time.Instant;
 import java.util.List;
 
 @RestController
@@ -22,9 +23,10 @@ public class FeedController {
             @RequestParam(required = false) List<Long> rssSourceIds,
             @RequestParam(required = false) List<Long> tagIds,
             @RequestParam(required = false) Long lastId,
+            @RequestParam(required = false) Instant lastPublishedAt,
             @RequestParam(defaultValue = "20") int size
     ) {
-        FeedSearchCriteria criteria = new FeedSearchCriteria(rssSourceIds, tagIds, lastId, size);
+        FeedSearchCriteria criteria = new FeedSearchCriteria(rssSourceIds, tagIds, lastId, lastPublishedAt, size);
         FeedEntryPage feedPage = feedQueryService.searchFeeds(criteria);
         return ResponseEntity.ok(FeedPageResponse.from(feedPage));
     }

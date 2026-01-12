@@ -23,6 +23,9 @@ export const feedApi = {
     if (params.lastId !== undefined) {
       searchParams.append('lastId', params.lastId.toString());
     }
+    if (params.lastPublishedAt !== undefined) {
+      searchParams.append('lastPublishedAt', params.lastPublishedAt);
+    }
     if (params.size !== undefined) {
       searchParams.append('size', params.size.toString());
     }
@@ -61,6 +64,24 @@ export const rssSourceApi = {
 
   syncAll: async (): Promise<SyncResult[]> => {
     const response = await api.post<SyncResult[]>('/rss-sources/sync-all');
+    return response.data;
+  },
+
+  importOpml: async (file: File, syncAfterImport = true): Promise<OpmlImportResult> => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('syncAfterImport', String(syncAfterImport));
+
+    const response = await api.post<OpmlImportResult>('/rss-sources/import/opml', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
+  },
+
+  updateTags: async (id: number, tagIds: number[]): Promise<RssSource> => {
+    const response = await api.put<RssSource>(`/rss-sources/${id}/tags`, { tagIds });
     return response.data;
   },
 };

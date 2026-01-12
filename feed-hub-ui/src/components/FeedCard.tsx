@@ -3,6 +3,8 @@ import './FeedCard.css';
 
 interface FeedCardProps {
   feed: FeedEntry;
+  onAddTag?: (feedId: number, rssSourceId: number) => void;
+  onTagClick?: (tagId: number) => void;
 }
 
 function formatDate(dateString: string | null): string {
@@ -17,7 +19,7 @@ function formatDate(dateString: string | null): string {
   });
 }
 
-export function FeedCard({ feed }: FeedCardProps) {
+export function FeedCard({ feed, onAddTag, onTagClick }: FeedCardProps) {
   return (
     <div className="feed-card">
       <div className="feed-card-header">
@@ -29,16 +31,39 @@ export function FeedCard({ feed }: FeedCardProps) {
           {feed.title}
         </a>
       </h3>
+      {feed.tags && feed.tags.length > 0 && (
+        <div className="feed-tags">
+          {feed.tags.map((tag) => (
+            <button
+              key={tag.id}
+              type="button"
+              className="feed-tag"
+              onClick={() => onTagClick?.(tag.id)}
+            >
+              #{tag.name}
+            </button>
+          ))}
+        </div>
+      )}
       <div className="feed-card-footer">
-        {feed.author && <span className="feed-author">{feed.author}</span>}
-        <a
-          href={feed.link}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="feed-link"
-        >
-          원문 보기 →
-        </a>
+        <span className="feed-author">{feed.author || ''}</span>
+        <div className="feed-card-actions">
+          <button
+            type="button"
+            className="btn-add-tag"
+            onClick={() => onAddTag?.(feed.id, feed.rssSource.id)}
+          >
+            태그추가
+          </button>
+          <a
+            href={feed.link}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="feed-link"
+          >
+            원문보기
+          </a>
+        </div>
       </div>
     </div>
   );

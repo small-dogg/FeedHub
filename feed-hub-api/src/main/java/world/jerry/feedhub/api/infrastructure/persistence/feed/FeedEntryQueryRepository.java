@@ -9,11 +9,18 @@ import org.springframework.stereotype.Repository;
 import world.jerry.feedhub.api.application.feed.dto.FeedEntryInfo;
 import world.jerry.feedhub.api.application.feed.dto.FeedEntryPage;
 import world.jerry.feedhub.api.application.feed.dto.FeedSearchCriteria;
+import world.jerry.feedhub.api.domain.feed.FeedEntry;
 import world.jerry.feedhub.api.domain.feed.QFeedEntry;
 import world.jerry.feedhub.api.domain.rss.QRssInfo;
+import world.jerry.feedhub.api.domain.rss.RssInfo;
 import world.jerry.feedhub.api.domain.tag.QTag;
+import world.jerry.feedhub.api.domain.tag.Tag;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import static world.jerry.feedhub.api.domain.feed.QFeedEntry.feedEntry;
 import static world.jerry.feedhub.api.domain.rss.QRssInfo.rssInfo;
@@ -48,8 +55,16 @@ public class FeedEntryQueryRepository {
             ));
         }
 
-        // Cursor-based pagination: fetch items with id < lastId
-        if (criteria.lastId() != null) {
+        // Cursor-based pagination for publishedAt DESC, id DESC ordering
+        // WHERE publishedAt < lastPublishedAt OR (publishedAt = lastPublishedAt AND id < lastId)
+        if (criteria.lastPublishedAt() != null && criteria.lastId() != null) {
+            predicate.and(
+                    feed.publishedAt.lt(criteria.lastPublishedAt())
+                            .or(feed.publishedAt.eq(criteria.lastPublishedAt())
+                                    .and(feed.id.lt(criteria.lastId())))
+            );
+        } else if (criteria.lastId() != null) {
+            // Fallback for feeds without publishedAt cursor
             predicate.and(feed.id.lt(criteria.lastId()));
         }
 
@@ -61,7 +76,7 @@ public class FeedEntryQueryRepository {
                 .from(feed)
                 .leftJoin(rss).on(feed.rssInfoId.eq(rss.id))
                 .where(predicate)
-                .orderBy(feed.id.desc())
+                .orderBy(feed.publishedAt.desc().nullsLast(), feed.id.desc())
                 .limit(fetchSize)
                 .fetch();
 
@@ -70,13 +85,43 @@ public class FeedEntryQueryRepository {
             results = results.subList(0, criteria.size());
         }
 
+        // Collect unique rssInfoIds for batch tag loading
+        Set<Long> rssInfoIds = results.stream()
+                .map(tuple -> tuple.get(feed))
+                .filter(f -> f != null)
+                .map(FeedEntry::getRssInfoId)
+                .collect(Collectors.toSet());
+
+        // Fetch tags for all rssInfoIds in one query
+        Map<Long, Set<Tag>> tagsByRssInfoId = fetchTagsByRssInfoIds(rssInfoIds);
+
         List<FeedEntryInfo> content = results.stream()
-                .map(tuple -> FeedEntryInfo.from(
-                        tuple.get(feed),
-                        tuple.get(rss.blogName)
-                ))
+                .map(tuple -> {
+                    FeedEntry entry = tuple.get(feed);
+                    String blogName = tuple.get(rss.blogName);
+                    Set<Tag> tags = tagsByRssInfoId.getOrDefault(entry.getRssInfoId(), Set.of());
+                    return FeedEntryInfo.from(entry, blogName, tags);
+                })
                 .toList();
 
         return FeedEntryPage.of(content, hasMore);
+    }
+
+    private Map<Long, Set<Tag>> fetchTagsByRssInfoIds(Set<Long> rssInfoIds) {
+        if (rssInfoIds.isEmpty()) {
+            return Map.of();
+        }
+
+        List<RssInfo> rssInfoList = queryFactory
+                .selectFrom(rssInfo)
+                .leftJoin(rssInfo.tags, tag).fetchJoin()
+                .where(rssInfo.id.in(rssInfoIds))
+                .fetch();
+
+        return rssInfoList.stream()
+                .collect(Collectors.toMap(
+                        RssInfo::getId,
+                        r -> new HashSet<>(r.getTags())
+                ));
     }
 }
