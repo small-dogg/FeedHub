@@ -6,12 +6,8 @@ import java.util.List;
 
 public record FeedPageResponse(
         List<FeedEntryResponse> content,
-        int page,
-        int size,
-        long totalElements,
-        int totalPages,
-        boolean hasNext,
-        boolean hasPrevious
+        Long lastId,
+        boolean hasMore
 ) {
     public static FeedPageResponse from(FeedEntryPage feedPage) {
         List<FeedEntryResponse> content = feedPage.content().stream()
@@ -19,12 +15,8 @@ public record FeedPageResponse(
                 .toList();
         return new FeedPageResponse(
                 content,
-                feedPage.page(),
-                feedPage.size(),
-                feedPage.totalElements(),
-                feedPage.totalPages(),
-                feedPage.hasNext(),
-                feedPage.hasPrevious()
+                feedPage.lastId(),
+                feedPage.hasMore()
         );
     }
 }

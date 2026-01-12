@@ -13,6 +13,8 @@ export function AdminModal({ isOpen, onClose }: AdminModalProps) {
   const [rssSources, setRssSources] = useState<RssSource[]>([]);
   const [tags, setTags] = useState<Tag[]>([]);
   const [loading, setLoading] = useState(false);
+  const [syncingId, setSyncingId] = useState<number | null>(null);
+  const [syncingAll, setSyncingAll] = useState(false);
 
   // Form states
   const [newSource, setNewSource] = useState({
@@ -106,6 +108,37 @@ export function AdminModal({ isOpen, onClose }: AdminModalProps) {
     }
   };
 
+  const handleSync = async (id: number) => {
+    setSyncingId(id);
+    try {
+      const result = await rssSourceApi.sync(id);
+      alert(`동기화 완료: ${result.syncedCount}개 추가, ${result.skippedCount}개 건너뜀`);
+      fetchData();
+    } catch (error) {
+      console.error('동기화 실패:', error);
+      alert('동기화에 실패했습니다.');
+    } finally {
+      setSyncingId(null);
+    }
+  };
+
+  const handleSyncAll = async () => {
+    if (!confirm('모든 RSS 소스를 동기화하시겠습니까?')) return;
+    setSyncingAll(true);
+    try {
+      const results = await rssSourceApi.syncAll();
+      const totalSynced = results.reduce((sum, r) => sum + r.syncedCount, 0);
+      const totalSkipped = results.reduce((sum, r) => sum + r.skippedCount, 0);
+      alert(`전체 동기화 완료: ${totalSynced}개 추가, ${totalSkipped}개 건너뜀`);
+      fetchData();
+    } catch (error) {
+      console.error('전체 동기화 실패:', error);
+      alert('전체 동기화에 실패했습니다.');
+    } finally {
+      setSyncingAll(false);
+    }
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -194,7 +227,18 @@ export function AdminModal({ isOpen, onClose }: AdminModalProps) {
               </form>
 
               <div className="admin-list">
-                <h4>등록된 RSS 소스 ({rssSources.length})</h4>
+                <div className="list-header">
+                  <h4>등록된 RSS 소스 ({rssSources.length})</h4>
+                  {rssSources.length > 0 && (
+                    <button
+                      className="btn btn-sync-all"
+                      onClick={handleSyncAll}
+                      disabled={syncingAll || syncingId !== null}
+                    >
+                      {syncingAll ? '동기화 중...' : '전체 동기화'}
+                    </button>
+                  )}
+                </div>
                 {rssSources.length === 0 ? (
                   <p className="empty-message">등록된 RSS 소스가 없습니다.</p>
                 ) : (
@@ -204,13 +248,28 @@ export function AdminModal({ isOpen, onClose }: AdminModalProps) {
                         <div className="list-item-info">
                           <strong>{source.blogName}</strong>
                           <span className="list-item-url">{source.rssUrl}</span>
+                          {source.lastSyncAt && (
+                            <span className="list-item-sync-time">
+                              마지막 동기화: {new Date(source.lastSyncAt).toLocaleString('ko-KR')}
+                            </span>
+                          )}
                         </div>
-                        <button
-                          className="btn-delete"
-                          onClick={() => handleDeleteSource(source.id)}
-                        >
-                          삭제
-                        </button>
+                        <div className="list-item-actions">
+                          <button
+                            className="btn-sync"
+                            onClick={() => handleSync(source.id)}
+                            disabled={syncingId !== null || syncingAll}
+                          >
+                            {syncingId === source.id ? '동기화 중...' : '동기화'}
+                          </button>
+                          <button
+                            className="btn-delete"
+                            onClick={() => handleDeleteSource(source.id)}
+                            disabled={syncingId !== null || syncingAll}
+                          >
+                            삭제
+                          </button>
+                        </div>
                       </li>
                     ))}
                   </ul>

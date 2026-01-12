@@ -28,13 +28,33 @@
   padding: 20px;
 }
 
-.feed-info {
+.load-more-container {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
-  font-size: 0.9rem;
-  color: #666;
+  justify-content: center;
+  padding: 24px;
+}
+
+.btn-load-more {
+  padding: 12px 48px;
+  font-size: 1rem;
+  font-weight: 500;
+  color: #1976d2;
+  background: #fff;
+  border: 2px solid #1976d2;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-load-more:hover:not(:disabled) {
+  background: #1976d2;
+  color: #fff;
+}
+
+.btn-load-more:disabled {
+  color: #999;
+  border-color: #ddd;
+  cursor: not-allowed;
 }
 
 @media (max-width: 600px) {

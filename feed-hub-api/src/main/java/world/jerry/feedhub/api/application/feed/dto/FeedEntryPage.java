@@ -4,17 +4,11 @@ import java.util.List;
 
 public record FeedEntryPage(
         List<FeedEntryInfo> content,
-        int page,
-        int size,
-        long totalElements,
-        int totalPages,
-        boolean hasNext,
-        boolean hasPrevious
+        Long lastId,
+        boolean hasMore
 ) {
-    public static FeedEntryPage of(List<FeedEntryInfo> content, int page, int size, long totalElements) {
-        int totalPages = (int) Math.ceil((double) totalElements / size);
-        boolean hasNext = page < totalPages - 1;
-        boolean hasPrevious = page > 0;
-        return new FeedEntryPage(content, page, size, totalElements, totalPages, hasNext, hasPrevious);
+    public static FeedEntryPage of(List<FeedEntryInfo> content, boolean hasMore) {
+        Long lastId = content.isEmpty() ? null : content.get(content.size() - 1).id();
+        return new FeedEntryPage(content, lastId, hasMore);
     }
 }

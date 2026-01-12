@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { FeedPage, FeedSearchParams, RssSource, Tag } from '../types';
+import type { FeedSlice, FeedSearchParams, OpmlImportResult, RssSource, SyncResult, Tag } from '../types';
 
 const API_BASE = '/api/v1';
 
@@ -12,7 +12,7 @@ const api = axios.create({
 
 // Feed API
 export const feedApi = {
-  search: async (params: FeedSearchParams): Promise<FeedPage> => {
+  search: async (params: FeedSearchParams): Promise<FeedSlice> => {
     const searchParams = new URLSearchParams();
     if (params.rssSourceIds?.length) {
       params.rssSourceIds.forEach(id => searchParams.append('rssSourceIds', id.toString()));
@@ -20,13 +20,13 @@ export const feedApi = {
     if (params.tagIds?.length) {
       params.tagIds.forEach(id => searchParams.append('tagIds', id.toString()));
     }
-    if (params.page !== undefined) {
-      searchParams.append('page', params.page.toString());
+    if (params.lastId !== undefined) {
+      searchParams.append('lastId', params.lastId.toString());
     }
     if (params.size !== undefined) {
       searchParams.append('size', params.size.toString());
     }
-    const response = await api.get<FeedPage>(`/feeds?${searchParams.toString()}`);
+    const response = await api.get<FeedSlice>(`/feeds?${searchParams.toString()}`);
     return response.data;
   },
 };
@@ -52,6 +52,16 @@ export const rssSourceApi = {
 
   delete: async (id: number): Promise<void> => {
     await api.delete(`/rss-sources/${id}`);
+  },
+
+  sync: async (id: number): Promise<SyncResult> => {
+    const response = await api.post<SyncResult>(`/rss-sources/${id}/sync`);
+    return response.data;
+  },
+
+  syncAll: async (): Promise<SyncResult[]> => {
+    const response = await api.post<SyncResult[]>('/rss-sources/sync-all');
+    return response.data;
   },
 };
 

@@ -28,6 +28,10 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-flyway'
     implementation 'org.flywaydb:flyway-database-postgresql'
 
+    // RSS/OPML Parsing
+    implementation 'com.rometools:rome:2.1.0'
+    implementation 'com.rometools:rome-opml:2.1.0'
+
     // Test
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'

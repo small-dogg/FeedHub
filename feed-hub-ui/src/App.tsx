@@ -1,64 +1,71 @@
 import { useState, useEffect, useCallback } from 'react';
-import { FeedList, FilterBar, Pagination, AdminModal, AdminButton } from './components';
+import { FeedList, FilterBar, AdminModal, AdminButton } from './components';
 import { feedApi } from './api/client';
-import type { FeedEntry, FeedPage } from './types';
+import type { FeedEntry } from './types';
 import './App.css';
 
 function App() {
   const [feeds, setFeeds] = useState<FeedEntry[]>([]);
   const [loading, setLoading] = useState(true);
-  const [page, setPage] = useState(0);
-  const [pageInfo, setPageInfo] = useState<Omit<FeedPage, 'content'>>({
-    page: 0,
-    size: 20,
-    totalElements: 0,
-    totalPages: 0,
-    hasNext: false,
-    hasPrevious: false,
-  });
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(false);
+  const [lastId, setLastId] = useState<number | null>(null);
   const [selectedRssSources, setSelectedRssSources] = useState<number[]>([]);
   const [selectedTags, setSelectedTags] = useState<number[]>([]);
   const [isAdminOpen, setIsAdminOpen] = useState(false);
 
-  const fetchFeeds = useCallback(async () => {
+  const fetchInitial = useCallback(async () => {
     setLoading(true);
+    setLastId(null);
+    setHasMore(false);
+
     try {
       const data = await feedApi.search({
         rssSourceIds: selectedRssSources.length > 0 ? selectedRssSources : undefined,
         tagIds: selectedTags.length > 0 ? selectedTags : undefined,
-        page,
         size: 20,
       });
+
       setFeeds(data.content);
-      setPageInfo({
-        page: data.page,
-        size: data.size,
-        totalElements: data.totalElements,
-        totalPages: data.totalPages,
-        hasNext: data.hasNext,
-        hasPrevious: data.hasPrevious,
-      });
+      setLastId(data.lastId);
+      setHasMore(data.hasMore);
     } catch (error) {
       console.error('피드 로드 실패:', error);
       setFeeds([]);
     } finally {
       setLoading(false);
     }
-  }, [page, selectedRssSources, selectedTags]);
+  }, [selectedRssSources, selectedTags]);
+
+  const handleLoadMore = async () => {
+    if (loadingMore || !hasMore || !lastId) return;
+    setLoadingMore(true);
+
+    try {
+      const data = await feedApi.search({
+        rssSourceIds: selectedRssSources.length > 0 ? selectedRssSources : undefined,
+        tagIds: selectedTags.length > 0 ? selectedTags : undefined,
+        lastId: lastId,
+        size: 20,
+      });
+
+      setFeeds(prev => [...prev, ...data.content]);
+      setLastId(data.lastId);
+      setHasMore(data.hasMore);
+    } catch (error) {
+      console.error('피드 추가 로드 실패:', error);
+    } finally {
+      setLoadingMore(false);
+    }
+  };
 
   useEffect(() => {
-    fetchFeeds();
-  }, [fetchFeeds]);
+    fetchInitial();
+  }, [fetchInitial]);
 
   const handleSearch = (rssSourceIds: number[], tagIds: number[]) => {
     setSelectedRssSources(rssSourceIds);
     setSelectedTags(tagIds);
-    setPage(0);
-  };
-
-  const handlePageChange = (newPage: number) => {
-    setPage(newPage);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   return (
@@ -71,21 +78,20 @@ function App() {
       <main className="app-main">
         <FilterBar onSearch={handleSearch} />
 
-        <div className="feed-info">
-          {!loading && (
-            <span>총 {pageInfo.totalElements}개의 피드</span>
-          )}
-        </div>
-
         <FeedList feeds={feeds} loading={loading} />
 
-        <Pagination
-          page={pageInfo.page}
-          totalPages={pageInfo.totalPages}
-          hasNext={pageInfo.hasNext}
-          hasPrevious={pageInfo.hasPrevious}
-          onPageChange={handlePageChange}
-        />
+        {/* Load more button */}
+        {hasMore && (
+          <div className="load-more-container">
+            <button
+              className="btn-load-more"
+              onClick={handleLoadMore}
+              disabled={loadingMore}
+            >
+              {loadingMore ? '불러오는 중...' : '더보기'}
+            </button>
+          </div>
+        )}
       </main>
 
       <AdminButton onClick={() => setIsAdminOpen(true)} />

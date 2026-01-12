@@ -5,12 +5,19 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+import world.jerry.feedhub.api.application.rss.OpmlImportService;
 import world.jerry.feedhub.api.application.rss.RssInfoService;
+import world.jerry.feedhub.api.application.rss.RssSyncService;
+import world.jerry.feedhub.api.application.rss.dto.OpmlImportResult;
 import world.jerry.feedhub.api.application.rss.dto.RssInfoDetail;
+import world.jerry.feedhub.api.interfaces.rest.rss.dto.OpmlImportResponse;
 import world.jerry.feedhub.api.interfaces.rest.rss.dto.RegisterRssSourceRequest;
 import world.jerry.feedhub.api.interfaces.rest.rss.dto.RssSourceResponse;
+import world.jerry.feedhub.api.interfaces.rest.rss.dto.SyncResponse;
 import world.jerry.feedhub.api.interfaces.rest.rss.dto.UpdateTagsRequest;
 
+import java.io.IOException;
 import java.util.List;
 
 @RestController
@@ -19,6 +26,8 @@ import java.util.List;
 public class RssSourceController {
 
     private final RssInfoService rssInfoService;
+    private final RssSyncService rssSyncService;
+    private final OpmlImportService opmlImportService;
 
     @PostMapping
     public ResponseEntity<RssSourceResponse> registerRssSource(@Valid @RequestBody RegisterRssSourceRequest request) {
@@ -50,5 +59,27 @@ public class RssSourceController {
     public ResponseEntity<Void> unregisterRssSource(@PathVariable Long id) {
         rssInfoService.unregisterRssInfo(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/{id}/sync")
+    public ResponseEntity<SyncResponse> syncRssSource(@PathVariable Long id) {
+        return ResponseEntity.ok(SyncResponse.from(rssSyncService.syncRssSource(id)));
+    }
+
+    @PostMapping("/sync-all")
+    public ResponseEntity<List<SyncResponse>> syncAllRssSources() {
+        List<SyncResponse> results = rssSyncService.syncAllRssSources().stream()
+                .map(SyncResponse::from)
+                .toList();
+        return ResponseEntity.ok(results);
+    }
+
+    @PostMapping("/import/opml")
+    public ResponseEntity<OpmlImportResponse> importOpml(
+            @RequestParam("file") MultipartFile file,
+            @RequestParam(value = "syncAfterImport", defaultValue = "true") boolean syncAfterImport
+    ) throws IOException {
+        OpmlImportResult result = opmlImportService.importOpml(file.getInputStream(), syncAfterImport);
+        return ResponseEntity.ok(OpmlImportResponse.from(result));
     }
 }

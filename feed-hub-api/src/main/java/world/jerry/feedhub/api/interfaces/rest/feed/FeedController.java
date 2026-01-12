@@ -21,10 +21,10 @@ public class FeedController {
     public ResponseEntity<FeedPageResponse> searchFeeds(
             @RequestParam(required = false) List<Long> rssSourceIds,
             @RequestParam(required = false) List<Long> tagIds,
-            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(required = false) Long lastId,
             @RequestParam(defaultValue = "20") int size
     ) {
-        FeedSearchCriteria criteria = new FeedSearchCriteria(rssSourceIds, tagIds, page, size);
+        FeedSearchCriteria criteria = new FeedSearchCriteria(rssSourceIds, tagIds, lastId, size);
         FeedEntryPage feedPage = feedQueryService.searchFeeds(criteria);
         return ResponseEntity.ok(FeedPageResponse.from(feedPage));
     }

@@ -39,7 +39,6 @@ public class FeedEntryQueryRepository {
 
         // Filter by tags (OR logic) - feeds from RSS sources that have ANY of the specified tags
         if (criteria.tagIds() != null && !criteria.tagIds().isEmpty()) {
-            // Use subquery: select rss_info.id from rss_info join rss_info.tags where tag.id in (...)
             predicate.and(feed.rssInfoId.in(
                     JPAExpressions
                             .select(rss.id)
@@ -49,27 +48,27 @@ public class FeedEntryQueryRepository {
             ));
         }
 
-        // Get total count
-        Long total = queryFactory
-                .select(feed.count())
-                .from(feed)
-                .where(predicate)
-                .fetchOne();
-
-        if (total == null) {
-            total = 0L;
+        // Cursor-based pagination: fetch items with id < lastId
+        if (criteria.lastId() != null) {
+            predicate.and(feed.id.lt(criteria.lastId()));
         }
 
-        // Get paginated results with blog name
+        // Fetch one more to check if there are more results
+        int fetchSize = criteria.size() + 1;
+
         List<Tuple> results = queryFactory
                 .select(feed, rss.blogName)
                 .from(feed)
                 .leftJoin(rss).on(feed.rssInfoId.eq(rss.id))
                 .where(predicate)
-                .orderBy(feed.publishedAt.desc().nullsLast())
-                .offset(criteria.offset())
-                .limit(criteria.size())
+                .orderBy(feed.id.desc())
+                .limit(fetchSize)
                 .fetch();
+
+        boolean hasMore = results.size() > criteria.size();
+        if (hasMore) {
+            results = results.subList(0, criteria.size());
+        }
 
         List<FeedEntryInfo> content = results.stream()
                 .map(tuple -> FeedEntryInfo.from(
@@ -78,6 +77,6 @@ public class FeedEntryQueryRepository {
                 ))
                 .toList();
 
-        return FeedEntryPage.of(content, criteria.page(), criteria.size(), total);
+        return FeedEntryPage.of(content, hasMore);
     }
 }

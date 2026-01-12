@@ -29,19 +29,31 @@ export interface FeedEntry {
   publishedAt: string | null;
 }
 
-export interface FeedPage {
+export interface FeedSlice {
   content: FeedEntry[];
-  page: number;
-  size: number;
-  totalElements: number;
-  totalPages: number;
-  hasNext: boolean;
-  hasPrevious: boolean;
+  lastId: number | null;
+  hasMore: boolean;
 }
 
 export interface FeedSearchParams {
   rssSourceIds?: number[];
   tagIds?: number[];
-  page?: number;
+  lastId?: number;
   size?: number;
+}
+
+export interface SyncResult {
+  rssSourceId: number;
+  blogName: string;
+  syncedCount: number;
+  skippedCount: number;
+  lastSyncAt: string;
+}
+
+export interface OpmlImportResult {
+  totalFound: number;
+  imported: number;
+  skipped: number;
+  skippedUrls: string[];
+  syncResults: SyncResult[];
 }
