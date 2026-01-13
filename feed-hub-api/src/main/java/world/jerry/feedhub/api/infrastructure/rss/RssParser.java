@@ -44,7 +44,7 @@ public class RssParser {
                 truncate(entry.getLink(), 2048),
                 extractDescription(entry),
                 truncate(entry.getAuthor(), 255),
-                toInstant(entry.getPublishedDate()),
+                extractPublishedAt(entry),
                 extractGuid(entry)
         );
     }
@@ -67,8 +67,20 @@ public class RssParser {
         return truncate(entry.getLink(), 2048);
     }
 
-    private Instant toInstant(Date date) {
-        return date != null ? date.toInstant() : null;
+    /**
+     * 발행일자 추출
+     * Atom 피드의 경우 published가 없으면 updated 사용
+     */
+    private Instant extractPublishedAt(SyndEntry entry) {
+        Date publishedDate = entry.getPublishedDate();
+        if (publishedDate != null) {
+            return publishedDate.toInstant();
+        }
+        Date updatedDate = entry.getUpdatedDate();
+        if (updatedDate != null) {
+            return updatedDate.toInstant();
+        }
+        return null;
     }
 
     private String truncate(String value, int maxLength) {
