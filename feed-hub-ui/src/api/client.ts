@@ -84,6 +84,34 @@ export const rssSourceApi = {
     const response = await api.put<RssSource>(`/rss-sources/${id}/tags`, { tagIds });
     return response.data;
   },
+
+  exportOpml: async (): Promise<void> => {
+    const response = await api.get('/rss-sources/export/opml', {
+      responseType: 'blob',
+    });
+
+    // 파일 다운로드 처리
+    const blob = new Blob([response.data], { type: 'application/xml' });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+
+    // Content-Disposition 헤더에서 파일명 추출 또는 기본 파일명 사용
+    const contentDisposition = response.headers['content-disposition'];
+    let filename = 'feedhub-subscriptions.opml';
+    if (contentDisposition) {
+      const match = contentDisposition.match(/filename="?([^";\n]+)"?/);
+      if (match) {
+        filename = match[1];
+      }
+    }
+
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+  },
 };
 
 // Tag API

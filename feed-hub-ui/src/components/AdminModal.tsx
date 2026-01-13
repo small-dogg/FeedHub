@@ -16,6 +16,7 @@ export function AdminModal({ isOpen, onClose }: AdminModalProps) {
   const [syncingId, setSyncingId] = useState<number | null>(null);
   const [syncingAll, setSyncingAll] = useState(false);
   const [importing, setImporting] = useState(false);
+  const [exporting, setExporting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Form states
@@ -166,6 +167,18 @@ export function AdminModal({ isOpen, onClose }: AdminModalProps) {
     }
   };
 
+  const handleExportOpml = async () => {
+    setExporting(true);
+    try {
+      await rssSourceApi.exportOpml();
+    } catch (error) {
+      console.error('OPML 내보내기 실패:', error);
+      alert('OPML 파일 내보내기에 실패했습니다.');
+    } finally {
+      setExporting(false);
+    }
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -198,7 +211,7 @@ export function AdminModal({ isOpen, onClose }: AdminModalProps) {
             <div className="modal-loading">로딩 중...</div>
           ) : activeTab === 'sources' ? (
             <div className="admin-section">
-              <div className="opml-import">
+              <div className="opml-actions">
                 <input
                   type="file"
                   ref={fileInputRef}
@@ -208,11 +221,19 @@ export function AdminModal({ isOpen, onClose }: AdminModalProps) {
                 />
                 <button
                   type="button"
-                  className="btn btn-opml"
+                  className="btn btn-opml-import"
                   onClick={() => fileInputRef.current?.click()}
-                  disabled={importing || syncingAll || syncingId !== null}
+                  disabled={importing || exporting || syncingAll || syncingId !== null}
                 >
-                  {importing ? 'OPML 가져오는 중...' : 'OPML 파일로 가져오기'}
+                  {importing ? '가져오는 중...' : 'OPML 가져오기'}
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-opml-export"
+                  onClick={handleExportOpml}
+                  disabled={importing || exporting || syncingAll || syncingId !== null || rssSources.length === 0}
+                >
+                  {exporting ? '내보내는 중...' : 'OPML 내보내기'}
                 </button>
               </div>
 

@@ -2,10 +2,14 @@ package world.jerry.feedhub.api.interfaces.rest.rss;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import world.jerry.feedhub.api.application.rss.OpmlExportService;
 import world.jerry.feedhub.api.application.rss.OpmlImportService;
 import world.jerry.feedhub.api.application.rss.RssInfoService;
 import world.jerry.feedhub.api.application.rss.RssSyncService;
@@ -18,6 +22,9 @@ import world.jerry.feedhub.api.interfaces.rest.rss.dto.SyncResponse;
 import world.jerry.feedhub.api.interfaces.rest.rss.dto.UpdateTagsRequest;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @RestController
@@ -28,6 +35,7 @@ public class RssSourceController {
     private final RssInfoService rssInfoService;
     private final RssSyncService rssSyncService;
     private final OpmlImportService opmlImportService;
+    private final OpmlExportService opmlExportService;
 
     @PostMapping
     public ResponseEntity<RssSourceResponse> registerRssSource(@Valid @RequestBody RegisterRssSourceRequest request) {
@@ -81,5 +89,20 @@ public class RssSourceController {
     ) throws IOException {
         OpmlImportResult result = opmlImportService.importOpml(file.getInputStream(), syncAfterImport);
         return ResponseEntity.ok(OpmlImportResponse.from(result));
+    }
+
+    @GetMapping("/export/opml")
+    public ResponseEntity<byte[]> exportOpml() {
+        String opmlContent = opmlExportService.exportAll();
+        byte[] contentBytes = opmlContent.getBytes(StandardCharsets.UTF_8);
+
+        String filename = "feedhub-subscriptions-" +
+                LocalDate.now().format(DateTimeFormatter.BASIC_ISO_DATE) + ".opml";
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_XML);
+        headers.setContentDisposition(ContentDisposition.attachment().filename(filename).build());
+
+        return ResponseEntity.ok().headers(headers).body(contentBytes);
     }
 }
