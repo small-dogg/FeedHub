@@ -1,6 +1,7 @@
 package world.jerry.feedhub.api.application.rss;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import world.jerry.feedhub.api.application.rss.dto.RegisterRssInfoCommand;
@@ -16,6 +17,7 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
+@Slf4j
 @Service
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
@@ -23,6 +25,7 @@ public class RssInfoService {
 
     private final RssInfoRepository rssInfoRepository;
     private final TagRepository tagRepository;
+    private final RssSyncService rssSyncService;
 
     @Transactional
     public RssInfoDetail registerRssInfo(RegisterRssInfoCommand command) {
@@ -44,6 +47,15 @@ public class RssInfoService {
         }
 
         RssInfo saved = rssInfoRepository.save(rssInfo);
+
+        // 최초 등록 시 동기화 수행
+        try {
+            rssSyncService.syncRssSource(saved.getId());
+        } catch (Exception e) {
+            log.warn("RSS 최초 동기화 실패: id={}, blogName={}, error={}",
+                    saved.getId(), saved.getBlogName(), e.getMessage());
+        }
+
         return RssInfoDetail.from(saved);
     }
 
