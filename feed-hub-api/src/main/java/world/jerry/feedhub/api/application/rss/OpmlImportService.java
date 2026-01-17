@@ -48,7 +48,6 @@ public class OpmlImportService {
                                 null,
                                 entry.xmlUrl(),
                                 entry.htmlUrl(),
-                                null,
                                 null
                         )
                 );

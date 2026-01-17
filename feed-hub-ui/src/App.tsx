@@ -17,7 +17,7 @@ function App() {
 
   // Tag modal state
   const [isTagModalOpen, setIsTagModalOpen] = useState(false);
-  const [tagModalRssSourceId, setTagModalRssSourceId] = useState<number | null>(null);
+  const [tagModalFeedId, setTagModalFeedId] = useState<number | null>(null);
   const [tagModalCurrentTags, setTagModalCurrentTags] = useState<{ id: number; name: string }[]>([]);
 
   const fetchInitial = useCallback(async () => {
@@ -96,19 +96,19 @@ function App() {
     setSelectedTags([tagId]);
   };
 
-  const handleAddTag = (_feedId: number, rssSourceId: number) => {
-    // Find current tags from feeds with same rssSourceId
-    const feedWithSource = feeds.find((f) => f.rssSource.id === rssSourceId);
-    const currentTags = feedWithSource?.tags || [];
+  const handleAddTag = (feedId: number) => {
+    // Find current tags from the feed
+    const feed = feeds.find((f) => f.id === feedId);
+    const currentTags = feed?.tags || [];
 
-    setTagModalRssSourceId(rssSourceId);
+    setTagModalFeedId(feedId);
     setTagModalCurrentTags(currentTags);
     setIsTagModalOpen(true);
   };
 
   const handleTagModalClose = () => {
     setIsTagModalOpen(false);
-    setTagModalRssSourceId(null);
+    setTagModalFeedId(null);
     setTagModalCurrentTags([]);
   };
 
@@ -159,7 +159,7 @@ function App() {
       <AdminModal isOpen={isAdminOpen} onClose={() => setIsAdminOpen(false)} />
       <TagSelectModal
         isOpen={isTagModalOpen}
-        rssSourceId={tagModalRssSourceId}
+        feedId={tagModalFeedId}
         currentTags={tagModalCurrentTags}
         onClose={handleTagModalClose}
         onUpdate={handleTagUpdate}

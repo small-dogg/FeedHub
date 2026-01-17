@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
 import type { Tag } from '../types';
-import { tagApi, rssSourceApi } from '../api/client';
+import { tagApi, feedApi } from '../api/client';
 import './TagSelectModal.css';
 
 interface TagSelectModalProps {
   isOpen: boolean;
-  rssSourceId: number | null;
+  feedId: number | null;
   currentTags: { id: number; name: string }[];
   onClose: () => void;
   onUpdate: () => void;
@@ -13,13 +13,15 @@ interface TagSelectModalProps {
 
 export function TagSelectModal({
   isOpen,
-  rssSourceId,
+  feedId,
   currentTags,
   onClose,
   onUpdate,
 }: TagSelectModalProps) {
   const [allTags, setAllTags] = useState<Tag[]>([]);
   const [selectedTagIds, setSelectedTagIds] = useState<number[]>([]);
+  const [newTagName, setNewTagName] = useState('');
+  const [newTagNames, setNewTagNames] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
 
@@ -27,6 +29,8 @@ export function TagSelectModal({
     if (isOpen) {
       fetchTags();
       setSelectedTagIds(currentTags.map((t) => t.id));
+      setNewTagName('');
+      setNewTagNames([]);
     }
   }, [isOpen, currentTags]);
 
@@ -50,12 +54,45 @@ export function TagSelectModal({
     );
   };
 
+  const handleAddNewTag = () => {
+    const trimmed = newTagName.trim();
+    if (!trimmed) return;
+
+    // 이미 존재하는 태그인지 확인
+    const existingTag = allTags.find(
+      (t) => t.name.toLowerCase() === trimmed.toLowerCase()
+    );
+    if (existingTag) {
+      // 기존 태그면 선택에 추가
+      if (!selectedTagIds.includes(existingTag.id)) {
+        setSelectedTagIds((prev) => [...prev, existingTag.id]);
+      }
+    } else {
+      // 새 태그면 newTagNames에 추가
+      if (!newTagNames.includes(trimmed)) {
+        setNewTagNames((prev) => [...prev, trimmed]);
+      }
+    }
+    setNewTagName('');
+  };
+
+  const handleRemoveNewTag = (tagName: string) => {
+    setNewTagNames((prev) => prev.filter((name) => name !== tagName));
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleAddNewTag();
+    }
+  };
+
   const handleSave = async () => {
-    if (!rssSourceId) return;
+    if (!feedId) return;
 
     setSaving(true);
     try {
-      await rssSourceApi.updateTags(rssSourceId, selectedTagIds);
+      await feedApi.updateTags(feedId, selectedTagIds, newTagNames);
       onUpdate();
       onClose();
     } catch (error) {
@@ -79,13 +116,51 @@ export function TagSelectModal({
         </div>
 
         <div className="tag-modal-body">
+          {/* 새 태그 입력 */}
+          <div className="new-tag-input">
+            <input
+              type="text"
+              placeholder="새 태그 입력 후 Enter"
+              value={newTagName}
+              onChange={(e) => setNewTagName(e.target.value)}
+              onKeyDown={handleKeyDown}
+              disabled={saving}
+            />
+            <button
+              type="button"
+              className="btn-add-new-tag"
+              onClick={handleAddNewTag}
+              disabled={!newTagName.trim() || saving}
+            >
+              추가
+            </button>
+          </div>
+
+          {/* 새로 추가할 태그 목록 */}
+          {newTagNames.length > 0 && (
+            <div className="new-tags-list">
+              {newTagNames.map((name) => (
+                <span key={name} className="new-tag-chip">
+                  #{name}
+                  <button
+                    type="button"
+                    className="remove-new-tag"
+                    onClick={() => handleRemoveNewTag(name)}
+                  >
+                    ×
+                  </button>
+                </span>
+              ))}
+            </div>
+          )}
+
           {loading ? (
             <div className="tag-modal-loading">태그 로딩 중...</div>
-          ) : allTags.length === 0 ? (
+          ) : allTags.length === 0 && newTagNames.length === 0 ? (
             <div className="tag-modal-empty">
               등록된 태그가 없습니다.
               <br />
-              관리자 설정에서 태그를 추가해주세요.
+              위 입력창에서 새 태그를 추가해주세요.
             </div>
           ) : (
             <div className="tag-select-list">

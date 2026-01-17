@@ -1,10 +1,8 @@
 package world.jerry.feedhub.api.application.rss.dto;
 
-import world.jerry.feedhub.api.application.tag.dto.TagInfo;
 import world.jerry.feedhub.api.domain.rss.RssInfo;
 
 import java.time.Instant;
-import java.util.List;
 
 public record RssInfoDetail(
         Long id,
@@ -14,13 +12,9 @@ public record RssInfoDetail(
         String siteUrl,
         String language,
         Instant createdAt,
-        Instant lastSyncAt,
-        List<TagInfo> tags
+        Instant lastSyncAt
 ) {
     public static RssInfoDetail from(RssInfo rssInfo) {
-        List<TagInfo> tagInfos = rssInfo.getTags().stream()
-                .map(TagInfo::from)
-                .toList();
         return new RssInfoDetail(
                 rssInfo.getId(),
                 rssInfo.getBlogName(),
@@ -29,8 +23,7 @@ public record RssInfoDetail(
                 rssInfo.getSiteUrl(),
                 rssInfo.getLanguage(),
                 rssInfo.getCreatedAt(),
-                rssInfo.getLastSyncAt(),
-                tagInfos
+                rssInfo.getLastSyncAt()
         );
     }
 }

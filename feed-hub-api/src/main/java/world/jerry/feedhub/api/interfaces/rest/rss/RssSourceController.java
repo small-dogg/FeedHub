@@ -19,7 +19,6 @@ import world.jerry.feedhub.api.interfaces.rest.rss.dto.OpmlImportResponse;
 import world.jerry.feedhub.api.interfaces.rest.rss.dto.RegisterRssSourceRequest;
 import world.jerry.feedhub.api.interfaces.rest.rss.dto.RssSourceResponse;
 import world.jerry.feedhub.api.interfaces.rest.rss.dto.SyncResponse;
-import world.jerry.feedhub.api.interfaces.rest.rss.dto.UpdateTagsRequest;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -54,12 +53,6 @@ public class RssSourceController {
     @GetMapping("/{id}")
     public ResponseEntity<RssSourceResponse> getRssSource(@PathVariable Long id) {
         RssInfoDetail detail = rssInfoService.getRssInfo(id);
-        return ResponseEntity.ok(RssSourceResponse.from(detail));
-    }
-
-    @PutMapping("/{id}/tags")
-    public ResponseEntity<RssSourceResponse> updateTags(@PathVariable Long id, @RequestBody UpdateTagsRequest request) {
-        RssInfoDetail detail = rssInfoService.updateTags(id, request.toCommand());
         return ResponseEntity.ok(RssSourceResponse.from(detail));
     }
 

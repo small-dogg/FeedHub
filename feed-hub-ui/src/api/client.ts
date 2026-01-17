@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { FeedSlice, FeedSearchParams, OpmlImportResult, RssSource, SyncResult, Tag } from '../types';
+import type { FeedEntry, FeedSlice, FeedSearchParams, OpmlImportResult, RssSource, SyncResult, Tag } from '../types';
 
 const API_BASE = '/api/v1';
 
@@ -30,6 +30,11 @@ export const feedApi = {
       searchParams.append('size', params.size.toString());
     }
     const response = await api.get<FeedSlice>(`/feeds?${searchParams.toString()}`);
+    return response.data;
+  },
+
+  updateTags: async (feedId: number, tagIds: number[], newTagNames: string[]): Promise<FeedEntry> => {
+    const response = await api.put<FeedEntry>(`/feeds/${feedId}/tags`, { tagIds, newTagNames });
     return response.data;
   },
 };

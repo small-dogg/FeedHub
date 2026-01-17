@@ -60,6 +60,83 @@
   flex: 1;
 }
 
+.new-tag-input {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.new-tag-input input {
+  flex: 1;
+  padding: 10px 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 0.9rem;
+}
+
+.new-tag-input input:focus {
+  outline: none;
+  border-color: #1976d2;
+}
+
+.btn-add-new-tag {
+  padding: 10px 16px;
+  background: #4caf50;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  white-space: nowrap;
+}
+
+.btn-add-new-tag:hover:not(:disabled) {
+  background: #43a047;
+}
+
+.btn-add-new-tag:disabled {
+  background: #bdbdbd;
+  cursor: not-allowed;
+}
+
+.new-tags-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+  padding: 12px;
+  background: #e8f5e9;
+  border-radius: 8px;
+}
+
+.new-tag-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  background: #4caf50;
+  color: #fff;
+  border-radius: 16px;
+  font-size: 0.85rem;
+}
+
+.remove-new-tag {
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+  opacity: 0.8;
+}
+
+.remove-new-tag:hover {
+  opacity: 1;
+}
+
 .tag-modal-loading,
 .tag-modal-empty {
   text-align: center;

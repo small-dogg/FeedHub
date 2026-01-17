@@ -3,7 +3,7 @@ import './FeedCard.css';
 
 interface FeedCardProps {
   feed: FeedEntry;
-  onAddTag?: (feedId: number, rssSourceId: number) => void;
+  onAddTag?: (feedId: number) => void;
   onTagClick?: (tagId: number) => void;
 }
 
@@ -51,7 +51,7 @@ export function FeedCard({ feed, onAddTag, onTagClick }: FeedCardProps) {
           <button
             type="button"
             className="btn-add-tag"
-            onClick={() => onAddTag?.(feed.id, feed.rssSource.id)}
+            onClick={() => onAddTag?.(feed.id)}
           >
             태그추가
           </button>

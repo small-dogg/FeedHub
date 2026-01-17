@@ -5,7 +5,7 @@ import './FeedList.css';
 interface FeedListProps {
   feeds: FeedEntry[];
   loading: boolean;
-  onAddTag?: (feedId: number, rssSourceId: number) => void;
+  onAddTag?: (feedId: number) => void;
   onTagClick?: (tagId: number) => void;
 }
 

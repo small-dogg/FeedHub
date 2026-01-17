@@ -27,6 +27,6 @@ public record RegisterRssSourceRequest(
         List<Long> tagIds
 ) {
     public RegisterRssInfoCommand toCommand() {
-        return new RegisterRssInfoCommand(blogName, author, rssUrl, siteUrl, language, tagIds);
+        return new RegisterRssInfoCommand(blogName, author, rssUrl, siteUrl, language);
     }
 }

@@ -12,7 +12,6 @@ import world.jerry.feedhub.api.application.feed.dto.FeedSearchCriteria;
 import world.jerry.feedhub.api.domain.feed.FeedEntry;
 import world.jerry.feedhub.api.domain.feed.QFeedEntry;
 import world.jerry.feedhub.api.domain.rss.QRssInfo;
-import world.jerry.feedhub.api.domain.rss.RssInfo;
 import world.jerry.feedhub.api.domain.tag.QTag;
 import world.jerry.feedhub.api.domain.tag.Tag;
 
@@ -44,13 +43,13 @@ public class FeedEntryQueryRepository {
             predicate.and(feed.rssInfoId.in(criteria.rssInfoIds()));
         }
 
-        // Filter by tags (OR logic) - feeds from RSS sources that have ANY of the specified tags
+        // Filter by tags (OR logic) - feeds that have ANY of the specified tags
         if (criteria.tagIds() != null && !criteria.tagIds().isEmpty()) {
-            predicate.and(feed.rssInfoId.in(
+            predicate.and(feed.id.in(
                     JPAExpressions
-                            .select(rss.id)
-                            .from(rss)
-                            .join(rss.tags, t)
+                            .select(feed.id)
+                            .from(feed)
+                            .join(feed.tags, t)
                             .where(t.id.in(criteria.tagIds()))
             ));
         }
@@ -85,21 +84,21 @@ public class FeedEntryQueryRepository {
             results = results.subList(0, criteria.size());
         }
 
-        // Collect unique rssInfoIds for batch tag loading
-        Set<Long> rssInfoIds = results.stream()
+        // Collect unique feed entry IDs for batch tag loading
+        Set<Long> feedEntryIds = results.stream()
                 .map(tuple -> tuple.get(feed))
                 .filter(f -> f != null)
-                .map(FeedEntry::getRssInfoId)
+                .map(FeedEntry::getId)
                 .collect(Collectors.toSet());
 
-        // Fetch tags for all rssInfoIds in one query
-        Map<Long, Set<Tag>> tagsByRssInfoId = fetchTagsByRssInfoIds(rssInfoIds);
+        // Fetch tags for all feed entries in one query
+        Map<Long, Set<Tag>> tagsByFeedEntryId = fetchTagsByFeedEntryIds(feedEntryIds);
 
         List<FeedEntryInfo> content = results.stream()
                 .map(tuple -> {
                     FeedEntry entry = tuple.get(feed);
                     String blogName = tuple.get(rss.blogName);
-                    Set<Tag> tags = tagsByRssInfoId.getOrDefault(entry.getRssInfoId(), Set.of());
+                    Set<Tag> tags = tagsByFeedEntryId.getOrDefault(entry.getId(), Set.of());
                     return FeedEntryInfo.from(entry, blogName, tags);
                 })
                 .toList();
@@ -107,21 +106,21 @@ public class FeedEntryQueryRepository {
         return FeedEntryPage.of(content, hasMore);
     }
 
-    private Map<Long, Set<Tag>> fetchTagsByRssInfoIds(Set<Long> rssInfoIds) {
-        if (rssInfoIds.isEmpty()) {
+    private Map<Long, Set<Tag>> fetchTagsByFeedEntryIds(Set<Long> feedEntryIds) {
+        if (feedEntryIds.isEmpty()) {
             return Map.of();
         }
 
-        List<RssInfo> rssInfoList = queryFactory
-                .selectFrom(rssInfo)
-                .leftJoin(rssInfo.tags, tag).fetchJoin()
-                .where(rssInfo.id.in(rssInfoIds))
+        List<FeedEntry> feedEntries = queryFactory
+                .selectFrom(feedEntry)
+                .leftJoin(feedEntry.tags, tag).fetchJoin()
+                .where(feedEntry.id.in(feedEntryIds))
                 .fetch();
 
-        return rssInfoList.stream()
+        return feedEntries.stream()
                 .collect(Collectors.toMap(
-                        RssInfo::getId,
-                        r -> new HashSet<>(r.getTags())
+                        FeedEntry::getId,
+                        f -> new HashSet<>(f.getTags())
                 ));
     }
 }

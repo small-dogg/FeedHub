@@ -4,8 +4,11 @@ import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import world.jerry.feedhub.api.domain.tag.Tag;
 
 import java.time.Instant;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "feed_entry")
@@ -41,6 +44,14 @@ public class FeedEntry {
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
+    @ManyToMany
+    @JoinTable(
+            name = "feed_entry_tag",
+            joinColumns = @JoinColumn(name = "feed_entry_id"),
+            inverseJoinColumns = @JoinColumn(name = "tag_id")
+    )
+    private Set<Tag> tags = new HashSet<>();
+
     public FeedEntry(Long rssInfoId, String title, String link, String description,
                      String author, Instant publishedAt, String guid) {
         this.rssInfoId = rssInfoId;
@@ -51,5 +62,10 @@ public class FeedEntry {
         this.publishedAt = publishedAt;
         this.guid = guid;
         this.createdAt = Instant.now();
+    }
+
+    public void updateTags(Set<Tag> newTags) {
+        this.tags.clear();
+        this.tags.addAll(newTags);
     }
 }

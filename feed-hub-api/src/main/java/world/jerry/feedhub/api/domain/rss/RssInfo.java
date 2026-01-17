@@ -4,11 +4,8 @@ import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import world.jerry.feedhub.api.domain.tag.Tag;
 
 import java.time.Instant;
-import java.util.HashSet;
-import java.util.Set;
 
 @Entity
 @Table(name = "rss_info")
@@ -41,14 +38,6 @@ public class RssInfo {
     @Column(name = "last_sync_at")
     private Instant lastSyncAt;
 
-    @ManyToMany
-    @JoinTable(
-            name = "rss_info_tag",
-            joinColumns = @JoinColumn(name = "rss_info_id"),
-            inverseJoinColumns = @JoinColumn(name = "tag_id")
-    )
-    private Set<Tag> tags = new HashSet<>();
-
     public RssInfo(String blogName, String author, String rssUrl, String siteUrl, String language) {
         this.blogName = blogName;
         this.author = author;
@@ -56,11 +45,6 @@ public class RssInfo {
         this.siteUrl = siteUrl;
         this.language = language;
         this.createdAt = Instant.now();
-    }
-
-    public void updateTags(Set<Tag> newTags) {
-        this.tags.clear();
-        this.tags.addAll(newTags);
     }
 
     public void updateLastSyncAt(Instant syncTime) {

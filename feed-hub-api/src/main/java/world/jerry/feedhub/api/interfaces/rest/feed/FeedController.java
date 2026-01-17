@@ -3,10 +3,14 @@ package world.jerry.feedhub.api.interfaces.rest.feed;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import world.jerry.feedhub.api.application.feed.FeedEntryService;
 import world.jerry.feedhub.api.application.feed.FeedQueryService;
+import world.jerry.feedhub.api.application.feed.dto.FeedEntryInfo;
 import world.jerry.feedhub.api.application.feed.dto.FeedEntryPage;
 import world.jerry.feedhub.api.application.feed.dto.FeedSearchCriteria;
+import world.jerry.feedhub.api.interfaces.rest.feed.dto.FeedEntryResponse;
 import world.jerry.feedhub.api.interfaces.rest.feed.dto.FeedPageResponse;
+import world.jerry.feedhub.api.interfaces.rest.feed.dto.UpdateFeedTagsRequest;
 
 import java.time.Instant;
 import java.util.List;
@@ -17,6 +21,7 @@ import java.util.List;
 public class FeedController {
 
     private final FeedQueryService feedQueryService;
+    private final FeedEntryService feedEntryService;
 
     @GetMapping
     public ResponseEntity<FeedPageResponse> searchFeeds(
@@ -29,5 +34,14 @@ public class FeedController {
         FeedSearchCriteria criteria = new FeedSearchCriteria(rssSourceIds, tagIds, lastId, lastPublishedAt, size);
         FeedEntryPage feedPage = feedQueryService.searchFeeds(criteria);
         return ResponseEntity.ok(FeedPageResponse.from(feedPage));
+    }
+
+    @PutMapping("/{id}/tags")
+    public ResponseEntity<FeedEntryResponse> updateTags(
+            @PathVariable Long id,
+            @RequestBody UpdateFeedTagsRequest request
+    ) {
+        FeedEntryInfo feedEntryInfo = feedEntryService.updateTags(id, request.toCommand());
+        return ResponseEntity.ok(FeedEntryResponse.from(feedEntryInfo));
     }
 }
