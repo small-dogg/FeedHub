@@ -54,6 +54,15 @@ public class FeedEntryQueryRepository {
             ));
         }
 
+        // Text search on title and description (uses pg_trgm GIN index)
+        if (criteria.query() != null && !criteria.query().isBlank()) {
+            String searchPattern = "%" + criteria.query().trim() + "%";
+            predicate.and(
+                    feed.title.likeIgnoreCase(searchPattern)
+                            .or(feed.description.likeIgnoreCase(searchPattern))
+            );
+        }
+
         // Cursor-based pagination for publishedAt DESC, id DESC ordering
         // WHERE publishedAt < lastPublishedAt OR (publishedAt = lastPublishedAt AND id < lastId)
         if (criteria.lastPublishedAt() != null && criteria.lastId() != null) {

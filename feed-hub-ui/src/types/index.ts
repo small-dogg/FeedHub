@@ -40,6 +40,7 @@ export interface FeedSlice {
 export interface FeedSearchParams {
   rssSourceIds?: number[];
   tagIds?: number[];
+  query?: string;
   lastId?: number;
   lastPublishedAt?: string;
   size?: number;

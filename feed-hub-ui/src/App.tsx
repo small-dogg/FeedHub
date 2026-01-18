@@ -13,6 +13,7 @@ function App() {
   const [lastPublishedAt, setLastPublishedAt] = useState<string | null>(null);
   const [selectedRssSources, setSelectedRssSources] = useState<number[]>([]);
   const [selectedTags, setSelectedTags] = useState<number[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
   const [isAdminOpen, setIsAdminOpen] = useState(false);
 
   // Tag modal state
@@ -30,6 +31,7 @@ function App() {
       const data = await feedApi.search({
         rssSourceIds: selectedRssSources.length > 0 ? selectedRssSources : undefined,
         tagIds: selectedTags.length > 0 ? selectedTags : undefined,
+        query: searchQuery.trim() || undefined,
         size: 20,
       });
 
@@ -43,7 +45,7 @@ function App() {
     } finally {
       setLoading(false);
     }
-  }, [selectedRssSources, selectedTags]);
+  }, [selectedRssSources, selectedTags, searchQuery]);
 
   const handleLoadMore = async () => {
     if (loadingMore || !hasMore || !lastId) return;
@@ -53,6 +55,7 @@ function App() {
       const data = await feedApi.search({
         rssSourceIds: selectedRssSources.length > 0 ? selectedRssSources : undefined,
         tagIds: selectedTags.length > 0 ? selectedTags : undefined,
+        query: searchQuery.trim() || undefined,
         lastId: lastId,
         lastPublishedAt: lastPublishedAt ?? undefined,
         size: 20,
@@ -88,6 +91,7 @@ function App() {
   const handleReset = () => {
     setSelectedRssSources([]);
     setSelectedTags([]);
+    setSearchQuery('');
   };
 
   const handleTagClick = (tagId: number) => {
@@ -128,8 +132,10 @@ function App() {
         <FilterBar
           selectedRssSources={selectedRssSources}
           selectedTags={selectedTags}
+          searchQuery={searchQuery}
           onRssSourceToggle={handleRssSourceToggle}
           onTagToggle={handleTagToggle}
+          onSearchQueryChange={setSearchQuery}
           onSearch={fetchInitial}
           onReset={handleReset}
         />

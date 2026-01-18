@@ -27,11 +27,12 @@ public class FeedController {
     public ResponseEntity<FeedPageResponse> searchFeeds(
             @RequestParam(required = false) List<Long> rssSourceIds,
             @RequestParam(required = false) List<Long> tagIds,
+            @RequestParam(required = false) String query,
             @RequestParam(required = false) Long lastId,
             @RequestParam(required = false) Instant lastPublishedAt,
             @RequestParam(defaultValue = "20") int size
     ) {
-        FeedSearchCriteria criteria = new FeedSearchCriteria(rssSourceIds, tagIds, lastId, lastPublishedAt, size);
+        FeedSearchCriteria criteria = new FeedSearchCriteria(rssSourceIds, tagIds, query, lastId, lastPublishedAt, size);
         FeedEntryPage feedPage = feedQueryService.searchFeeds(criteria);
         return ResponseEntity.ok(FeedPageResponse.from(feedPage));
     }

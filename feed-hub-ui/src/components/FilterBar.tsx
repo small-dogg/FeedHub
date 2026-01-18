@@ -6,8 +6,10 @@ import './FilterBar.css';
 interface FilterBarProps {
   selectedRssSources: number[];
   selectedTags: number[];
+  searchQuery: string;
   onRssSourceToggle: (id: number) => void;
   onTagToggle: (id: number) => void;
+  onSearchQueryChange: (query: string) => void;
   onSearch: () => void;
   onReset: () => void;
 }
@@ -15,8 +17,10 @@ interface FilterBarProps {
 export function FilterBar({
   selectedRssSources,
   selectedTags,
+  searchQuery,
   onRssSourceToggle,
   onTagToggle,
+  onSearchQueryChange,
   onSearch,
   onReset,
 }: FilterBarProps) {
@@ -46,8 +50,26 @@ export function FilterBar({
     return <div className="filter-bar filter-loading">필터 로딩 중...</div>;
   }
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      onSearch();
+    }
+  };
+
   return (
     <div className="filter-bar">
+      <div className="filter-section search-section">
+        <h4>검색</h4>
+        <input
+          type="text"
+          className="search-input"
+          placeholder="제목, 내용 검색..."
+          value={searchQuery}
+          onChange={(e) => onSearchQueryChange(e.target.value)}
+          onKeyDown={handleKeyDown}
+        />
+      </div>
+
       <div className="filter-section">
         <h4>RSS 소스</h4>
         <div className="filter-chips">

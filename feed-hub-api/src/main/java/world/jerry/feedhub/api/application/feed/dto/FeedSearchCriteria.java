@@ -6,6 +6,7 @@ import java.util.List;
 public record FeedSearchCriteria(
         List<Long> rssInfoIds,
         List<Long> tagIds,
+        String query,
         Long lastId,
         Instant lastPublishedAt,
         int size

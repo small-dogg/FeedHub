@@ -20,6 +20,9 @@ export const feedApi = {
     if (params.tagIds?.length) {
       params.tagIds.forEach(id => searchParams.append('tagIds', id.toString()));
     }
+    if (params.query) {
+      searchParams.append('query', params.query);
+    }
     if (params.lastId !== undefined) {
       searchParams.append('lastId', params.lastId.toString());
     }
