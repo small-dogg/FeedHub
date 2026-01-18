@@ -1,13 +1,42 @@
 import axios from 'axios';
-import type { FeedEntry, FeedSlice, FeedSearchParams, OpmlImportResult, RssSource, SyncResult, Tag } from '../types';
+import type {
+  FeedEntry,
+  FeedSlice,
+  FeedSearchParams,
+  OpmlImportResult,
+  RssSource,
+  SyncResult,
+  Tag,
+  AuthResponse,
+  SignUpRequest,
+  SignInRequest,
+  User,
+} from '../types';
 
 const API_BASE = '/api/v1';
+const TOKEN_KEY = 'feedhub_access_token';
 
 const api = axios.create({
   baseURL: API_BASE,
   headers: {
     'Content-Type': 'application/json',
   },
+});
+
+// Token management
+export const tokenManager = {
+  getToken: (): string | null => localStorage.getItem(TOKEN_KEY),
+  setToken: (token: string): void => localStorage.setItem(TOKEN_KEY, token),
+  removeToken: (): void => localStorage.removeItem(TOKEN_KEY),
+};
+
+// Add auth header interceptor
+api.interceptors.request.use((config) => {
+  const token = tokenManager.getToken();
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
 });
 
 // Feed API
@@ -140,5 +169,30 @@ export const tagApi = {
 
   delete: async (id: number): Promise<void> => {
     await api.delete(`/tags/${id}`);
+  },
+};
+
+// Auth API
+export const authApi = {
+  signUp: async (data: SignUpRequest): Promise<AuthResponse> => {
+    const response = await api.post<AuthResponse>('/auth/signup', data);
+    return response.data;
+  },
+
+  signIn: async (data: SignInRequest): Promise<AuthResponse> => {
+    const response = await api.post<AuthResponse>('/auth/signin', data);
+    return response.data;
+  },
+
+  checkEmail: async (email: string): Promise<{ available: boolean }> => {
+    const response = await api.get<{ available: boolean }>('/auth/check-email', {
+      params: { email },
+    });
+    return response.data;
+  },
+
+  getMe: async (): Promise<User> => {
+    const response = await api.get<User>('/auth/me');
+    return response.data;
   },
 };

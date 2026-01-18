@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
-import { FeedList, FilterBar, AdminModal, AdminButton, TagSelectModal } from './components';
-import { feedApi } from './api/client';
-import type { FeedEntry } from './types';
+import { FeedList, FilterBar, AdminModal, AdminButton, TagSelectModal, AuthModal } from './components';
+import { feedApi, authApi, tokenManager } from './api/client';
+import type { FeedEntry, User } from './types';
 import './App.css';
 
 function App() {
@@ -15,6 +15,10 @@ function App() {
   const [selectedTags, setSelectedTags] = useState<number[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [isAdminOpen, setIsAdminOpen] = useState(false);
+
+  // Auth state
+  const [user, setUser] = useState<User | null>(null);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
 
   // Tag modal state
   const [isTagModalOpen, setIsTagModalOpen] = useState(false);
@@ -76,6 +80,19 @@ function App() {
     fetchInitial();
   }, [fetchInitial]);
 
+  // Check for existing auth token on mount
+  useEffect(() => {
+    const token = tokenManager.getToken();
+    if (token) {
+      authApi.getMe()
+        .then((userData) => setUser(userData))
+        .catch(() => {
+          // Token is invalid, remove it
+          tokenManager.removeToken();
+        });
+    }
+  }, []);
+
   const handleRssSourceToggle = (id: number) => {
     setSelectedRssSources((prev) =>
       prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
@@ -101,6 +118,12 @@ function App() {
   };
 
   const handleAddTag = (feedId: number) => {
+    // Check if user is logged in
+    if (!user) {
+      setIsAuthModalOpen(true);
+      return;
+    }
+
     // Find current tags from the feed
     const feed = feeds.find((f) => f.id === feedId);
     const currentTags = feed?.tags || [];
@@ -132,11 +155,42 @@ function App() {
     );
   };
 
+  const handleAuthSuccess = (userData: User, token: string) => {
+    tokenManager.setToken(token);
+    setUser(userData);
+    setIsAuthModalOpen(false);
+  };
+
+  const handleLogout = () => {
+    tokenManager.removeToken();
+    setUser(null);
+  };
+
   return (
     <div className="app">
       <header className="app-header">
-        <h1>FeedHub</h1>
-        <p>RSS 피드를 한눈에</p>
+        <div className="header-left">
+          <h1>FeedHub</h1>
+          <p>RSS 피드를 한눈에</p>
+        </div>
+        <div className="header-right">
+          {user ? (
+            <div className="user-info">
+              <span className="user-nickname">{user.nickname}</span>
+              <button type="button" className="btn-logout" onClick={handleLogout}>
+                로그아웃
+              </button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              className="btn-login"
+              onClick={() => setIsAuthModalOpen(true)}
+            >
+              로그인
+            </button>
+          )}
+        </div>
       </header>
 
       <main className="app-main">
@@ -181,6 +235,11 @@ function App() {
         currentTags={tagModalCurrentTags}
         onClose={handleTagModalClose}
         onUpdate={handleTagUpdate}
+      />
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+        onAuthSuccess={handleAuthSuccess}
       />
     </div>
   );

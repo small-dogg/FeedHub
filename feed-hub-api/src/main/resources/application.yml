@@ -12,3 +12,8 @@ spring:
     open-in-view: false
 server:
   port: 8080
+
+# JWT Configuration
+jwt:
+  secret: ${JWT_SECRET:feedhub-jwt-secret-key-must-be-at-least-256-bits-long-for-hs256}
+  expiration-ms: 86400000  # 24 hours

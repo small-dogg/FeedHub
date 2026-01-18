@@ -63,3 +63,27 @@ export interface OpmlImportResult {
   skippedUrls: string[];
   syncResults: SyncResult[];
 }
+
+// Auth types
+export interface User {
+  id: number;
+  email: string;
+  nickname: string;
+}
+
+export interface AuthResponse {
+  accessToken: string;
+  user: User;
+}
+
+export interface SignUpRequest {
+  email: string;
+  password: string;
+  passwordConfirm: string;
+  nickname: string;
+}
+
+export interface SignInRequest {
+  email: string;
+  password: string;
+}

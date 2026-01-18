@@ -1,0 +1,177 @@
+.auth-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.auth-modal {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 32px;
+  width: 100%;
+  max-width: 400px;
+  position: relative;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.auth-modal-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: #666;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+}
+
+.auth-modal-close:hover {
+  color: #333;
+}
+
+.auth-modal-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+.auth-tab {
+  flex: 1;
+  padding: 12px;
+  border: none;
+  background: #f5f5f5;
+  color: #666;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.auth-tab:hover {
+  background: #e0e0e0;
+}
+
+.auth-tab.active {
+  background: #1976d2;
+  color: #ffffff;
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-group label {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #333;
+}
+
+.form-group input {
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: border-color 0.2s ease;
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: #1976d2;
+}
+
+.email-input-group {
+  display: flex;
+  gap: 8px;
+}
+
+.email-input-group input {
+  flex: 1;
+}
+
+.btn-check-email {
+  padding: 12px 16px;
+  background: #f5f5f5;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+.btn-check-email:hover:not(:disabled) {
+  background: #e0e0e0;
+}
+
+.btn-check-email:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.email-available {
+  font-size: 0.85rem;
+  color: #4caf50;
+}
+
+.auth-error {
+  padding: 12px;
+  background: #ffebee;
+  color: #c62828;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.btn-auth-submit {
+  padding: 14px;
+  background: #1976d2;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.btn-auth-submit:hover:not(:disabled) {
+  background: #1565c0;
+}
+
+.btn-auth-submit:disabled {
+  background: #90caf9;
+  cursor: not-allowed;
+}
+
+@media (max-width: 480px) {
+  .auth-modal {
+    margin: 16px;
+    padding: 24px;
+  }
+
+  .email-input-group {
+    flex-direction: column;
+  }
+
+  .btn-check-email {
+    width: 100%;
+  }
+}
