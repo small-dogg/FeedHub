@@ -7,6 +7,7 @@ interface FilterBarProps {
   selectedRssSources: number[];
   selectedTags: number[];
   searchQuery: string;
+  isLoggedIn: boolean;
   onRssSourceToggle: (id: number) => void;
   onTagToggle: (id: number) => void;
   onSearchQueryChange: (query: string) => void;
@@ -18,6 +19,7 @@ export function FilterBar({
   selectedRssSources,
   selectedTags,
   searchQuery,
+  isLoggedIn,
   onRssSourceToggle,
   onTagToggle,
   onSearchQueryChange,
@@ -31,12 +33,16 @@ export function FilterBar({
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [sourcesData, tagsData] = await Promise.all([
-          rssSourceApi.getAll(),
-          tagApi.getAll(),
-        ]);
+        const sourcesData = await rssSourceApi.getAll();
         setRssSources(sourcesData);
-        setTags(tagsData);
+
+        // 태그는 로그인 상태에서만 조회
+        if (isLoggedIn) {
+          const tagsData = await tagApi.getAll();
+          setTags(tagsData);
+        } else {
+          setTags([]);
+        }
       } catch (error) {
         console.error('필터 데이터 로드 실패:', error);
       } finally {
@@ -44,7 +50,7 @@ export function FilterBar({
       }
     };
     fetchData();
-  }, []);
+  }, [isLoggedIn]);
 
   if (loading) {
     return <div className="filter-bar filter-loading">필터 로딩 중...</div>;
@@ -92,7 +98,9 @@ export function FilterBar({
       <div className="filter-section">
         <h4>태그</h4>
         <div className="filter-chips">
-          {tags.length === 0 ? (
+          {!isLoggedIn ? (
+            <span className="filter-empty">로그인 후 태그를 사용할 수 있습니다</span>
+          ) : tags.length === 0 ? (
             <span className="filter-empty">등록된 태그가 없습니다</span>
           ) : (
             tags.map((tag) => (

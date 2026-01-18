@@ -8,7 +8,9 @@ import lombok.NoArgsConstructor;
 import java.time.Instant;
 
 @Entity
-@Table(name = "tag")
+@Table(name = "tag", uniqueConstraints = {
+        @UniqueConstraint(columnNames = {"member_id", "name"})
+})
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Tag {
@@ -17,13 +19,17 @@ public class Tag {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "name", nullable = false, unique = true, length = 100)
+    @Column(name = "member_id", nullable = false)
+    private Long memberId;
+
+    @Column(name = "name", nullable = false, length = 100)
     private String name;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
-    public Tag(String name) {
+    public Tag(Long memberId, String name) {
+        this.memberId = memberId;
         this.name = name;
         this.createdAt = Instant.now();
     }

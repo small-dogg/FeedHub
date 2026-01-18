@@ -4,6 +4,7 @@ import java.time.Instant;
 import java.util.List;
 
 public record FeedSearchCriteria(
+        Long memberId,
         List<Long> rssInfoIds,
         List<Long> tagIds,
         String query,

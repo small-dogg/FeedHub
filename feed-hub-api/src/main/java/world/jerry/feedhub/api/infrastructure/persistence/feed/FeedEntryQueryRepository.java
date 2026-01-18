@@ -100,8 +100,8 @@ public class FeedEntryQueryRepository {
                 .map(FeedEntry::getId)
                 .collect(Collectors.toSet());
 
-        // Fetch tags for all feed entries in one query
-        Map<Long, Set<Tag>> tagsByFeedEntryId = fetchTagsByFeedEntryIds(feedEntryIds);
+        // Fetch tags for all feed entries in one query (filtered by member if logged in)
+        Map<Long, Set<Tag>> tagsByFeedEntryId = fetchTagsByFeedEntryIds(feedEntryIds, criteria.memberId());
 
         List<FeedEntryInfo> content = results.stream()
                 .map(tuple -> {
@@ -116,21 +116,43 @@ public class FeedEntryQueryRepository {
         return FeedEntryPage.of(content, hasMore);
     }
 
-    private Map<Long, Set<Tag>> fetchTagsByFeedEntryIds(Set<Long> feedEntryIds) {
+    private Map<Long, Set<Tag>> fetchTagsByFeedEntryIds(Set<Long> feedEntryIds, Long memberId) {
         if (feedEntryIds.isEmpty()) {
             return Map.of();
         }
 
+        // 비로그인 상태면 태그 없이 반환
+        if (memberId == null) {
+            return feedEntryIds.stream()
+                    .collect(Collectors.toMap(id -> id, id -> Set.of()));
+        }
+
+        // 로그인 상태: 해당 회원의 태그만 조회
         List<FeedEntry> feedEntries = queryFactory
                 .selectFrom(feedEntry)
                 .leftJoin(feedEntry.tags, tag).fetchJoin()
-                .where(feedEntry.id.in(feedEntryIds))
+                .where(feedEntry.id.in(feedEntryIds)
+                        .and(tag.memberId.eq(memberId).or(tag.isNull())))
                 .fetch();
 
-        return feedEntries.stream()
+        // 결과를 Map으로 변환 (해당 회원의 태그만 포함)
+        Map<Long, Set<Tag>> result = feedEntries.stream()
                 .collect(Collectors.toMap(
                         FeedEntry::getId,
-                        f -> new HashSet<>(f.getTags())
+                        f -> f.getTags().stream()
+                                .filter(t -> memberId.equals(t.getMemberId()))
+                                .collect(Collectors.toSet()),
+                        (existing, replacement) -> {
+                            existing.addAll(replacement);
+                            return existing;
+                        }
                 ));
+
+        // feedEntryIds 중 결과에 없는 것들은 빈 Set으로 채움
+        for (Long id : feedEntryIds) {
+            result.putIfAbsent(id, Set.of());
+        }
+
+        return result;
     }
 }

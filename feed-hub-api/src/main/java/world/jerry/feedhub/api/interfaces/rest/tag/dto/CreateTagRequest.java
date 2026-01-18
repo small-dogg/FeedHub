@@ -9,7 +9,7 @@ public record CreateTagRequest(
         @Size(max = 100, message = "Tag name must be at most 100 characters")
         String name
 ) {
-    public CreateTagCommand toCommand() {
-        return new CreateTagCommand(name);
+    public CreateTagCommand toCommand(Long memberId) {
+        return new CreateTagCommand(memberId, name);
     }
 }

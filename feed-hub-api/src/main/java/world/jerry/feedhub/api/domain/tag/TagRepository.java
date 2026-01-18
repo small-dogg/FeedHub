@@ -9,13 +9,15 @@ public interface TagRepository {
 
     Optional<Tag> findById(Long id);
 
-    Optional<Tag> findByName(String name);
+    Optional<Tag> findByMemberIdAndName(Long memberId, String name);
 
-    List<Tag> findAll();
+    List<Tag> findAllByMemberId(Long memberId);
 
     List<Tag> findAllByIdIn(List<Long> ids);
 
+    List<Tag> findAllByMemberIdAndIdIn(Long memberId, List<Long> ids);
+
     void deleteById(Long id);
 
-    boolean existsByName(String name);
+    boolean existsByMemberIdAndName(Long memberId, String name);
 }

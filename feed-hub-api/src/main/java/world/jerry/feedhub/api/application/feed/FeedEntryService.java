@@ -33,31 +33,32 @@ public class FeedEntryService {
 
     /**
      * 피드 엔트리에 태그 업데이트
-     * 존재하지 않는 태그명은 자동으로 생성
+     * 존재하지 않는 태그명은 자동으로 생성 (해당 회원의 태그로)
      */
     @Transactional
     public FeedEntryInfo updateTags(Long feedEntryId, UpdateFeedTagsCommand command) {
         FeedEntry feedEntry = feedEntryRepository.findById(feedEntryId)
                 .orElseThrow(() -> new NoSuchElementException("피드를 찾을 수 없습니다: " + feedEntryId));
 
+        Long memberId = command.memberId();
         Set<Tag> tagsToAssign = new HashSet<>();
 
-        // 기존 태그 ID로 태그 조회
+        // 기존 태그 ID로 태그 조회 (해당 회원의 태그만)
         if (command.tagIds() != null && !command.tagIds().isEmpty()) {
-            List<Tag> existingTags = tagRepository.findAllByIdIn(command.tagIds());
+            List<Tag> existingTags = tagRepository.findAllByMemberIdAndIdIn(memberId, command.tagIds());
             tagsToAssign.addAll(existingTags);
         }
 
-        // 새 태그명으로 태그 생성 또는 조회
+        // 새 태그명으로 태그 생성 또는 조회 (해당 회원의 태그)
         if (command.newTagNames() != null && !command.newTagNames().isEmpty()) {
             for (String tagName : command.newTagNames()) {
                 String trimmedName = tagName.trim();
                 if (trimmedName.isEmpty()) continue;
 
-                Tag tag = tagRepository.findByName(trimmedName)
+                Tag tag = tagRepository.findByMemberIdAndName(memberId, trimmedName)
                         .orElseGet(() -> {
-                            log.info("새 태그 생성: {}", trimmedName);
-                            return tagRepository.save(new Tag(trimmedName));
+                            log.info("새 태그 생성 - memberId: {}, name: {}", memberId, trimmedName);
+                            return tagRepository.save(new Tag(memberId, trimmedName));
                         });
                 tagsToAssign.add(tag);
             }

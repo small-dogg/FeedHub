@@ -13,7 +13,7 @@ public record UpdateFeedTagsRequest(
         List<Long> tagIds,
         List<String> newTagNames
 ) {
-    public UpdateFeedTagsCommand toCommand() {
-        return new UpdateFeedTagsCommand(tagIds, newTagNames);
+    public UpdateFeedTagsCommand toCommand(Long memberId) {
+        return new UpdateFeedTagsCommand(memberId, tagIds, newTagNames);
     }
 }

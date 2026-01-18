@@ -1,7 +1,9 @@
 package world.jerry.feedhub.api.interfaces.rest.feed;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import world.jerry.feedhub.api.application.feed.FeedEntryService;
 import world.jerry.feedhub.api.application.feed.FeedQueryService;
@@ -25,6 +27,7 @@ public class FeedController {
 
     @GetMapping
     public ResponseEntity<FeedPageResponse> searchFeeds(
+            @AuthenticationPrincipal Long memberId,
             @RequestParam(required = false) List<Long> rssSourceIds,
             @RequestParam(required = false) List<Long> tagIds,
             @RequestParam(required = false) String query,
@@ -32,17 +35,21 @@ public class FeedController {
             @RequestParam(required = false) Instant lastPublishedAt,
             @RequestParam(defaultValue = "20") int size
     ) {
-        FeedSearchCriteria criteria = new FeedSearchCriteria(rssSourceIds, tagIds, query, lastId, lastPublishedAt, size);
+        FeedSearchCriteria criteria = new FeedSearchCriteria(memberId, rssSourceIds, tagIds, query, lastId, lastPublishedAt, size);
         FeedEntryPage feedPage = feedQueryService.searchFeeds(criteria);
         return ResponseEntity.ok(FeedPageResponse.from(feedPage));
     }
 
     @PutMapping("/{id}/tags")
     public ResponseEntity<FeedEntryResponse> updateTags(
+            @AuthenticationPrincipal Long memberId,
             @PathVariable Long id,
             @RequestBody UpdateFeedTagsRequest request
     ) {
-        FeedEntryInfo feedEntryInfo = feedEntryService.updateTags(id, request.toCommand());
+        if (memberId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        FeedEntryInfo feedEntryInfo = feedEntryService.updateTags(id, request.toCommand(memberId));
         return ResponseEntity.ok(FeedEntryResponse.from(feedEntryInfo));
     }
 

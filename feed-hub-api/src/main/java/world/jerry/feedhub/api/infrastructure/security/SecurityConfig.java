@@ -30,9 +30,9 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/auth/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/feeds/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/rss-sources/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/v1/tags/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/feeds/*/view").permitAll()
                         // Protected endpoints require authentication
+                        .requestMatchers("/api/v1/tags/**").authenticated()
                         .requestMatchers(HttpMethod.PUT, "/api/v1/feeds/*/tags").authenticated()
                         // All other requests
                         .anyRequest().permitAll()

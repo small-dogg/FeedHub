@@ -159,11 +159,15 @@ function App() {
     tokenManager.setToken(token);
     setUser(userData);
     setIsAuthModalOpen(false);
+    // 로그인 후 피드 목록 새로고침 (태그 정보 갱신)
+    fetchInitial();
   };
 
   const handleLogout = () => {
     tokenManager.removeToken();
     setUser(null);
+    // 로그아웃 후 피드 목록 새로고침 (태그 정보 제거)
+    fetchInitial();
   };
 
   return (
@@ -198,6 +202,7 @@ function App() {
           selectedRssSources={selectedRssSources}
           selectedTags={selectedTags}
           searchQuery={searchQuery}
+          isLoggedIn={user !== null}
           onRssSourceToggle={handleRssSourceToggle}
           onTagToggle={handleTagToggle}
           onSearchQueryChange={setSearchQuery}
