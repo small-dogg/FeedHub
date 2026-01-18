@@ -116,9 +116,11 @@ function App() {
     setTagModalCurrentTags([]);
   };
 
-  const handleTagUpdate = () => {
-    // Refresh feeds to reflect updated tags
-    fetchInitial();
+  const handleTagUpdate = (updatedFeed: FeedEntry) => {
+    // Update only the modified feed without full refresh
+    setFeeds((prev) =>
+      prev.map((feed) => (feed.id === updatedFeed.id ? updatedFeed : feed))
+    );
   };
 
   return (

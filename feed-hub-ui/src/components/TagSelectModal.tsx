@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import type { Tag } from '../types';
+import type { Tag, FeedEntry } from '../types';
 import { tagApi, feedApi } from '../api/client';
 import './TagSelectModal.css';
 
@@ -8,7 +8,7 @@ interface TagSelectModalProps {
   feedId: number | null;
   currentTags: { id: number; name: string }[];
   onClose: () => void;
-  onUpdate: () => void;
+  onUpdate: (updatedFeed: FeedEntry) => void;
 }
 
 export function TagSelectModal({
@@ -92,8 +92,8 @@ export function TagSelectModal({
 
     setSaving(true);
     try {
-      await feedApi.updateTags(feedId, selectedTagIds, newTagNames);
-      onUpdate();
+      const updatedFeed = await feedApi.updateTags(feedId, selectedTagIds, newTagNames);
+      onUpdate(updatedFeed);
       onClose();
     } catch (error) {
       console.error('태그 업데이트 실패:', error);
