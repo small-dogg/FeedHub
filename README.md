@@ -4,7 +4,9 @@ RSS 피드를 한눈에 관리하고 조회할 수 있는 웹 애플리케이션
 
 ## Preview
 
-<video src="PREVIEW.mp4" controls width="100%"></video>
+
+https://github.com/user-attachments/assets/ac8e3fcf-c03b-4857-b7c1-7fb64b2f8a21
+
 
 > 동영상이 표시되지 않으면 [PREVIEW.mp4](./PREVIEW.mp4) 파일을 직접 다운로드하여 확인하세요.
 
