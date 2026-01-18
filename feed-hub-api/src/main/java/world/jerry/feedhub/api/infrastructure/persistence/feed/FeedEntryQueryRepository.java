@@ -80,7 +80,7 @@ public class FeedEntryQueryRepository {
         int fetchSize = criteria.size() + 1;
 
         List<Tuple> results = queryFactory
-                .select(feed, rss.blogName)
+                .select(feed, rss.blogName, rss.siteUrl)
                 .from(feed)
                 .leftJoin(rss).on(feed.rssInfoId.eq(rss.id))
                 .where(predicate)
@@ -107,8 +107,9 @@ public class FeedEntryQueryRepository {
                 .map(tuple -> {
                     FeedEntry entry = tuple.get(feed);
                     String blogName = tuple.get(rss.blogName);
+                    String siteUrl = tuple.get(rss.siteUrl);
                     Set<Tag> tags = tagsByFeedEntryId.getOrDefault(entry.getId(), Set.of());
-                    return FeedEntryInfo.from(entry, blogName, tags);
+                    return FeedEntryInfo.from(entry, blogName, siteUrl, tags);
                 })
                 .toList();
 

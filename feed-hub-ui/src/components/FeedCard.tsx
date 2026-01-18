@@ -23,7 +23,18 @@ export function FeedCard({ feed, onAddTag, onTagClick }: FeedCardProps) {
   return (
     <div className="feed-card">
       <div className="feed-card-header">
-        <span className="feed-blog-name">{feed.rssSource.blogName}</span>
+        {feed.rssSource.siteUrl ? (
+          <a
+            href={feed.rssSource.siteUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="feed-blog-name"
+          >
+            {feed.rssSource.blogName}
+          </a>
+        ) : (
+          <span className="feed-blog-name">{feed.rssSource.blogName}</span>
+        )}
         <span className="feed-date">{formatDate(feed.publishedAt)}</span>
       </div>
       <h3 className="feed-title">

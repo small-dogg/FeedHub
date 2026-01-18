@@ -23,7 +23,7 @@ public record FeedEntryResponse(
                 : List.of();
         return new FeedEntryResponse(
                 info.id(),
-                new RssSourceSummary(info.rssInfoId(), info.rssInfoBlogName()),
+                new RssSourceSummary(info.rssInfoId(), info.rssInfoBlogName(), info.rssInfoSiteUrl()),
                 info.title(),
                 info.link(),
                 info.description(),
@@ -33,6 +33,6 @@ public record FeedEntryResponse(
         );
     }
 
-    public record RssSourceSummary(Long id, String blogName) {}
+    public record RssSourceSummary(Long id, String blogName, String siteUrl) {}
     public record TagSummary(Long id, String name) {}
 }

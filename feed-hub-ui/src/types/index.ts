@@ -21,6 +21,7 @@ export interface FeedEntry {
   rssSource: {
     id: number;
     blogName: string;
+    siteUrl: string | null;
   };
   title: string;
   link: string;

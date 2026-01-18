@@ -11,6 +11,7 @@ public record FeedEntryInfo(
         Long id,
         Long rssInfoId,
         String rssInfoBlogName,
+        String rssInfoSiteUrl,
         String title,
         String link,
         String description,
@@ -18,7 +19,7 @@ public record FeedEntryInfo(
         Instant publishedAt,
         List<TagSummary> tags
 ) {
-    public static FeedEntryInfo from(FeedEntry entry, String blogName, Set<Tag> tags) {
+    public static FeedEntryInfo from(FeedEntry entry, String blogName, String siteUrl, Set<Tag> tags) {
         List<TagSummary> tagSummaries = tags != null
                 ? tags.stream().map(TagSummary::from).toList()
                 : List.of();
@@ -26,6 +27,7 @@ public record FeedEntryInfo(
                 entry.getId(),
                 entry.getRssInfoId(),
                 blogName,
+                siteUrl,
                 entry.getTitle(),
                 entry.getLink(),
                 entry.getDescription(),

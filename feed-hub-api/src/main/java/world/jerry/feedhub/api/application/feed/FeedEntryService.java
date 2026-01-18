@@ -65,11 +65,11 @@ public class FeedEntryService {
 
         feedEntry.updateTags(tagsToAssign);
 
-        // 블로그 이름 조회
-        String blogName = rssInfoRepository.findById(feedEntry.getRssInfoId())
-                .map(RssInfo::getBlogName)
-                .orElse(null);
+        // RSS 정보 조회 (블로그 이름, 사이트 URL)
+        RssInfo rssInfo = rssInfoRepository.findById(feedEntry.getRssInfoId()).orElse(null);
+        String blogName = rssInfo != null ? rssInfo.getBlogName() : null;
+        String siteUrl = rssInfo != null ? rssInfo.getSiteUrl() : null;
 
-        return FeedEntryInfo.from(feedEntry, blogName, feedEntry.getTags());
+        return FeedEntryInfo.from(feedEntry, blogName, siteUrl, feedEntry.getTags());
     }
 }
