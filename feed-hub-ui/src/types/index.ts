@@ -28,6 +28,7 @@ export interface FeedEntry {
   description: string | null;
   author: string | null;
   publishedAt: string | null;
+  viewCount: number;
   tags: { id: number; name: string }[];
 }
 

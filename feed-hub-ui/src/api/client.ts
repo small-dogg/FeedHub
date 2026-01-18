@@ -40,6 +40,10 @@ export const feedApi = {
     const response = await api.put<FeedEntry>(`/feeds/${feedId}/tags`, { tagIds, newTagNames });
     return response.data;
   },
+
+  incrementViewCount: async (feedId: number): Promise<void> => {
+    await api.post(`/feeds/${feedId}/view`);
+  },
 };
 
 // RSS Source API

@@ -1,10 +1,12 @@
 import type { FeedEntry } from '../types';
+import { feedApi } from '../api/client';
 import './FeedCard.css';
 
 interface FeedCardProps {
   feed: FeedEntry;
   onAddTag?: (feedId: number) => void;
   onTagClick?: (tagId: number) => void;
+  onViewCountUpdate?: (feedId: number) => void;
 }
 
 function formatDate(dateString: string | null): string {
@@ -19,7 +21,15 @@ function formatDate(dateString: string | null): string {
   });
 }
 
-export function FeedCard({ feed, onAddTag, onTagClick }: FeedCardProps) {
+export function FeedCard({ feed, onAddTag, onTagClick, onViewCountUpdate }: FeedCardProps) {
+  const handleViewClick = () => {
+    // 조회수 증가 API 호출 (비동기, 에러 무시)
+    feedApi.incrementViewCount(feed.id).then(() => {
+      onViewCountUpdate?.(feed.id);
+    }).catch(() => {
+      // 조회수 증가 실패는 무시
+    });
+  };
   return (
     <div className="feed-card">
       <div className="feed-card-header">
@@ -57,7 +67,12 @@ export function FeedCard({ feed, onAddTag, onTagClick }: FeedCardProps) {
         </div>
       )}
       <div className="feed-card-footer">
-        <span className="feed-author">{feed.author || ''}</span>
+        <div className="feed-footer-left">
+          <span className="feed-author">{feed.author || ''}</span>
+          {feed.viewCount > 0 && (
+            <span className="feed-view-count">조회 {feed.viewCount}</span>
+          )}
+        </div>
         <div className="feed-card-actions">
           <button
             type="button"
@@ -71,6 +86,7 @@ export function FeedCard({ feed, onAddTag, onTagClick }: FeedCardProps) {
             target="_blank"
             rel="noopener noreferrer"
             className="feed-link"
+            onClick={handleViewClick}
           >
             원문보기
           </a>

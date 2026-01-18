@@ -7,9 +7,10 @@ interface FeedListProps {
   loading: boolean;
   onAddTag?: (feedId: number) => void;
   onTagClick?: (tagId: number) => void;
+  onViewCountUpdate?: (feedId: number) => void;
 }
 
-export function FeedList({ feeds, loading, onAddTag, onTagClick }: FeedListProps) {
+export function FeedList({ feeds, loading, onAddTag, onTagClick, onViewCountUpdate }: FeedListProps) {
   if (loading) {
     return (
       <div className="feed-list-loading">
@@ -30,7 +31,13 @@ export function FeedList({ feeds, loading, onAddTag, onTagClick }: FeedListProps
   return (
     <div className="feed-list">
       {feeds.map((feed) => (
-        <FeedCard key={feed.id} feed={feed} onAddTag={onAddTag} onTagClick={onTagClick} />
+        <FeedCard
+          key={feed.id}
+          feed={feed}
+          onAddTag={onAddTag}
+          onTagClick={onTagClick}
+          onViewCountUpdate={onViewCountUpdate}
+        />
       ))}
     </div>
   );

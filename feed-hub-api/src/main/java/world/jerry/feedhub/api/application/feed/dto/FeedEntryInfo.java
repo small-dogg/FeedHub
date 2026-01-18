@@ -17,6 +17,7 @@ public record FeedEntryInfo(
         String description,
         String author,
         Instant publishedAt,
+        Long viewCount,
         List<TagSummary> tags
 ) {
     public static FeedEntryInfo from(FeedEntry entry, String blogName, String siteUrl, Set<Tag> tags) {
@@ -33,6 +34,7 @@ public record FeedEntryInfo(
                 entry.getDescription(),
                 entry.getAuthor(),
                 entry.getPublishedAt(),
+                entry.getViewCount(),
                 tagSummaries
         );
     }

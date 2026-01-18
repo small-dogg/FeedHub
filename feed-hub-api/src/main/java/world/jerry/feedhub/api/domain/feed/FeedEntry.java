@@ -44,6 +44,9 @@ public class FeedEntry {
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
+    @Column(name = "view_count", nullable = false)
+    private Long viewCount = 0L;
+
     @ManyToMany
     @JoinTable(
             name = "feed_entry_tag",

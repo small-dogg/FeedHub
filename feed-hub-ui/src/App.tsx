@@ -123,6 +123,15 @@ function App() {
     );
   };
 
+  const handleViewCountUpdate = (feedId: number) => {
+    // Increment viewCount locally for immediate feedback
+    setFeeds((prev) =>
+      prev.map((feed) =>
+        feed.id === feedId ? { ...feed, viewCount: feed.viewCount + 1 } : feed
+      )
+    );
+  };
+
   return (
     <div className="app">
       <header className="app-header">
@@ -147,6 +156,7 @@ function App() {
           loading={loading}
           onAddTag={handleAddTag}
           onTagClick={handleTagClick}
+          onViewCountUpdate={handleViewCountUpdate}
         />
 
         {/* Load more button */}

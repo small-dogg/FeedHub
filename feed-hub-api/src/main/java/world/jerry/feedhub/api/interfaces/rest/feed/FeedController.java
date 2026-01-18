@@ -45,4 +45,10 @@ public class FeedController {
         FeedEntryInfo feedEntryInfo = feedEntryService.updateTags(id, request.toCommand());
         return ResponseEntity.ok(FeedEntryResponse.from(feedEntryInfo));
     }
+
+    @PostMapping("/{id}/view")
+    public ResponseEntity<Void> incrementViewCount(@PathVariable Long id) {
+        feedEntryService.incrementViewCount(id);
+        return ResponseEntity.ok().build();
+    }
 }

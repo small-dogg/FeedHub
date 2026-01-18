@@ -13,6 +13,7 @@ public record FeedEntryResponse(
         String description,
         String author,
         Instant publishedAt,
+        Long viewCount,
         List<TagSummary> tags
 ) {
     public static FeedEntryResponse from(FeedEntryInfo info) {
@@ -29,6 +30,7 @@ public record FeedEntryResponse(
                 info.description(),
                 info.author(),
                 info.publishedAt(),
+                info.viewCount(),
                 tagSummaries
         );
     }

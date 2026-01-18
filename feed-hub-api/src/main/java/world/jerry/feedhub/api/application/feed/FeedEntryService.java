@@ -72,4 +72,15 @@ public class FeedEntryService {
 
         return FeedEntryInfo.from(feedEntry, blogName, siteUrl, feedEntry.getTags());
     }
+
+    /**
+     * 피드 조회수 증가 (원자적 업데이트로 동시성 안전)
+     */
+    @Transactional
+    public void incrementViewCount(Long feedEntryId) {
+        int updated = feedEntryRepository.incrementViewCount(feedEntryId);
+        if (updated == 0) {
+            log.warn("피드 조회수 증가 실패 - 존재하지 않는 피드: {}", feedEntryId);
+        }
+    }
 }

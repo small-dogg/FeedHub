@@ -75,8 +75,19 @@
   font-size: 0.85rem;
 }
 
+.feed-footer-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
 .feed-author {
   color: #666;
+}
+
+.feed-view-count {
+  color: #999;
+  font-size: 0.8rem;
 }
 
 .feed-card-actions {
