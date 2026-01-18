@@ -24,6 +24,29 @@
   font-weight: 500;
 }
 
+.feed-header-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.feed-read-status {
+  font-size: 0.75rem;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 500;
+}
+
+.feed-read-status.read {
+  background: #e8f5e9;
+  color: #4caf50;
+}
+
+.feed-read-status.unread {
+  background: #fff3e0;
+  color: #ff9800;
+}
+
 .feed-date {
   color: #888;
 }
@@ -150,6 +173,11 @@
   .feed-card-header,
   .feed-card-footer {
     font-size: 0.8rem;
+  }
+
+  .feed-read-status {
+    font-size: 0.7rem;
+    padding: 2px 4px;
   }
 
   .feed-tag {

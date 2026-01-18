@@ -146,11 +146,13 @@ function App() {
     );
   };
 
-  const handleViewCountUpdate = (feedId: number) => {
-    // Increment viewCount locally for immediate feedback
+  const handleMarkAsRead = (feedId: number) => {
+    // 읽음 상태 및 조회수 로컬 업데이트
     setFeeds((prev) =>
       prev.map((feed) =>
-        feed.id === feedId ? { ...feed, viewCount: feed.viewCount + 1 } : feed
+        feed.id === feedId
+          ? { ...feed, isRead: true, viewCount: feed.viewCount + 1 }
+          : feed
       )
     );
   };
@@ -215,7 +217,7 @@ function App() {
           loading={loading}
           onAddTag={handleAddTag}
           onTagClick={handleTagClick}
-          onViewCountUpdate={handleViewCountUpdate}
+          onMarkAsRead={handleMarkAsRead}
         />
 
         {/* Load more button */}

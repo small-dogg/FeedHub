@@ -18,9 +18,14 @@ public record FeedEntryInfo(
         String author,
         Instant publishedAt,
         Long viewCount,
-        List<TagSummary> tags
+        List<TagSummary> tags,
+        boolean isRead
 ) {
     public static FeedEntryInfo from(FeedEntry entry, String blogName, String siteUrl, Set<Tag> tags) {
+        return from(entry, blogName, siteUrl, tags, false);
+    }
+
+    public static FeedEntryInfo from(FeedEntry entry, String blogName, String siteUrl, Set<Tag> tags, boolean isRead) {
         List<TagSummary> tagSummaries = tags != null
                 ? tags.stream().map(TagSummary::from).toList()
                 : List.of();
@@ -35,7 +40,8 @@ public record FeedEntryInfo(
                 entry.getAuthor(),
                 entry.getPublishedAt(),
                 entry.getViewCount(),
-                tagSummaries
+                tagSummaries,
+                isRead
         );
     }
 

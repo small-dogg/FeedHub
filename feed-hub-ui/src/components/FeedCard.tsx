@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import type { FeedEntry } from '../types';
 import { feedApi } from '../api/client';
 import { ContentPreviewModal } from './ContentPreviewModal';
@@ -8,7 +8,7 @@ interface FeedCardProps {
   feed: FeedEntry;
   onAddTag?: (feedId: number) => void;
   onTagClick?: (tagId: number) => void;
-  onViewCountUpdate?: (feedId: number) => void;
+  onMarkAsRead?: (feedId: number) => void;
 }
 
 function formatDate(dateString: string | null): string {
@@ -23,16 +23,32 @@ function formatDate(dateString: string | null): string {
   });
 }
 
-export function FeedCard({ feed, onAddTag, onTagClick, onViewCountUpdate }: FeedCardProps) {
+export function FeedCard({ feed, onAddTag, onTagClick, onMarkAsRead }: FeedCardProps) {
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  // 이번 세션에서 API를 호출했는지 추적 (중복 호출 방지)
+  const hasCalledApiRef = useRef(false);
+
+  // 읽음 처리 및 조회수 증가 (한 번만 호출)
+  const markAsReadOnce = () => {
+    if (feed.isRead || hasCalledApiRef.current) {
+      return; // 이미 읽음 상태이거나 이미 API 호출함
+    }
+    hasCalledApiRef.current = true;
+    feedApi.incrementViewCount(feed.id).then(() => {
+      onMarkAsRead?.(feed.id);
+    }).catch(() => {
+      // 실패 시 다시 시도할 수 있도록 리셋
+      hasCalledApiRef.current = false;
+    });
+  };
+
+  const handlePreviewOpen = () => {
+    setIsPreviewOpen(true);
+    markAsReadOnce();
+  };
 
   const handleViewClick = () => {
-    // 조회수 증가 API 호출 (비동기, 에러 무시)
-    feedApi.incrementViewCount(feed.id).then(() => {
-      onViewCountUpdate?.(feed.id);
-    }).catch(() => {
-      // 조회수 증가 실패는 무시
-    });
+    markAsReadOnce();
   };
   return (
     <div className="feed-card">
@@ -49,10 +65,15 @@ export function FeedCard({ feed, onAddTag, onTagClick, onViewCountUpdate }: Feed
         ) : (
           <span className="feed-blog-name">{feed.rssSource.blogName}</span>
         )}
-        <span className="feed-date">{formatDate(feed.publishedAt)}</span>
+        <div className="feed-header-right">
+          <span className={`feed-read-status ${feed.isRead ? 'read' : 'unread'}`}>
+            {feed.isRead ? '읽음' : '읽지않음'}
+          </span>
+          <span className="feed-date">{formatDate(feed.publishedAt)}</span>
+        </div>
       </div>
       <h3 className="feed-title">
-        <a href={feed.link} target="_blank" rel="noopener noreferrer">
+        <a href={feed.link} target="_blank" rel="noopener noreferrer" onClick={handleViewClick}>
           {feed.title}
         </a>
       </h3>
@@ -88,7 +109,7 @@ export function FeedCard({ feed, onAddTag, onTagClick, onViewCountUpdate }: Feed
           <button
             type="button"
             className="btn-preview"
-            onClick={() => setIsPreviewOpen(true)}
+            onClick={handlePreviewOpen}
           >
             미리보기
           </button>

@@ -7,10 +7,10 @@ interface FeedListProps {
   loading: boolean;
   onAddTag?: (feedId: number) => void;
   onTagClick?: (tagId: number) => void;
-  onViewCountUpdate?: (feedId: number) => void;
+  onMarkAsRead?: (feedId: number) => void;
 }
 
-export function FeedList({ feeds, loading, onAddTag, onTagClick, onViewCountUpdate }: FeedListProps) {
+export function FeedList({ feeds, loading, onAddTag, onTagClick, onMarkAsRead }: FeedListProps) {
   if (loading) {
     return (
       <div className="feed-list-loading">
@@ -36,7 +36,7 @@ export function FeedList({ feeds, loading, onAddTag, onTagClick, onViewCountUpda
           feed={feed}
           onAddTag={onAddTag}
           onTagClick={onTagClick}
-          onViewCountUpdate={onViewCountUpdate}
+          onMarkAsRead={onMarkAsRead}
         />
       ))}
     </div>

@@ -10,6 +10,7 @@ import world.jerry.feedhub.api.application.feed.dto.FeedEntryInfo;
 import world.jerry.feedhub.api.application.feed.dto.FeedEntryPage;
 import world.jerry.feedhub.api.application.feed.dto.FeedSearchCriteria;
 import world.jerry.feedhub.api.domain.feed.FeedEntry;
+import world.jerry.feedhub.api.domain.feed.MemberFeedReadRepository;
 import world.jerry.feedhub.api.domain.feed.QFeedEntry;
 import world.jerry.feedhub.api.domain.rss.QRssInfo;
 import world.jerry.feedhub.api.domain.tag.QTag;
@@ -30,6 +31,7 @@ import static world.jerry.feedhub.api.domain.tag.QTag.tag;
 public class FeedEntryQueryRepository {
 
     private final JPAQueryFactory queryFactory;
+    private final MemberFeedReadRepository memberFeedReadRepository;
 
     public FeedEntryPage searchFeeds(FeedSearchCriteria criteria) {
         QFeedEntry feed = feedEntry;
@@ -103,17 +105,28 @@ public class FeedEntryQueryRepository {
         // Fetch tags for all feed entries in one query (filtered by member if logged in)
         Map<Long, Set<Tag>> tagsByFeedEntryId = fetchTagsByFeedEntryIds(feedEntryIds, criteria.memberId());
 
+        // Fetch read status for all feed entries (filtered by member if logged in)
+        Set<Long> readFeedEntryIds = fetchReadFeedEntryIds(feedEntryIds, criteria.memberId());
+
         List<FeedEntryInfo> content = results.stream()
                 .map(tuple -> {
                     FeedEntry entry = tuple.get(feed);
                     String blogName = tuple.get(rss.blogName);
                     String siteUrl = tuple.get(rss.siteUrl);
                     Set<Tag> tags = tagsByFeedEntryId.getOrDefault(entry.getId(), Set.of());
-                    return FeedEntryInfo.from(entry, blogName, siteUrl, tags);
+                    boolean isRead = readFeedEntryIds.contains(entry.getId());
+                    return FeedEntryInfo.from(entry, blogName, siteUrl, tags, isRead);
                 })
                 .toList();
 
         return FeedEntryPage.of(content, hasMore);
+    }
+
+    private Set<Long> fetchReadFeedEntryIds(Set<Long> feedEntryIds, Long memberId) {
+        if (feedEntryIds.isEmpty() || memberId == null) {
+            return Set.of();
+        }
+        return memberFeedReadRepository.findReadFeedEntryIdsByMemberIdAndFeedEntryIdIn(memberId, feedEntryIds);
     }
 
     private Map<Long, Set<Tag>> fetchTagsByFeedEntryIds(Set<Long> feedEntryIds, Long memberId) {

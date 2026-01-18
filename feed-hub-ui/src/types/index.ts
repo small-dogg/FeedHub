@@ -30,6 +30,7 @@ export interface FeedEntry {
   publishedAt: string | null;
   viewCount: number;
   tags: { id: number; name: string }[];
+  isRead: boolean;
 }
 
 export interface FeedSlice {

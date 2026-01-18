@@ -8,6 +8,8 @@ import world.jerry.feedhub.api.application.feed.dto.FeedEntryInfo;
 import world.jerry.feedhub.api.application.feed.dto.UpdateFeedTagsCommand;
 import world.jerry.feedhub.api.domain.feed.FeedEntry;
 import world.jerry.feedhub.api.domain.feed.FeedEntryRepository;
+import world.jerry.feedhub.api.domain.feed.MemberFeedRead;
+import world.jerry.feedhub.api.domain.feed.MemberFeedReadRepository;
 import world.jerry.feedhub.api.domain.rss.RssInfo;
 import world.jerry.feedhub.api.domain.rss.RssInfoRepository;
 import world.jerry.feedhub.api.domain.tag.Tag;
@@ -28,6 +30,7 @@ import java.util.Set;
 public class FeedEntryService {
 
     private final FeedEntryRepository feedEntryRepository;
+    private final MemberFeedReadRepository memberFeedReadRepository;
     private final RssInfoRepository rssInfoRepository;
     private final TagRepository tagRepository;
 
@@ -83,5 +86,34 @@ public class FeedEntryService {
         if (updated == 0) {
             log.warn("피드 조회수 증가 실패 - 존재하지 않는 피드: {}", feedEntryId);
         }
+    }
+
+    /**
+     * 피드를 읽음 처리하고 조회수 증가
+     * 이미 읽은 피드는 중복 처리하지 않음
+     * @return true if newly marked as read, false if already read
+     */
+    @Transactional
+    public boolean markAsRead(Long feedEntryId, Long memberId) {
+        if (memberId == null) {
+            // 비로그인 상태에서는 조회수만 증가
+            incrementViewCount(feedEntryId);
+            return false;
+        }
+
+        // 이미 읽은 피드인지 확인
+        if (memberFeedReadRepository.existsByMemberIdAndFeedEntryId(memberId, feedEntryId)) {
+            log.debug("이미 읽은 피드 - memberId: {}, feedEntryId: {}", memberId, feedEntryId);
+            return false;
+        }
+
+        // 읽음 기록 저장
+        memberFeedReadRepository.save(new MemberFeedRead(memberId, feedEntryId));
+
+        // 조회수 증가
+        incrementViewCount(feedEntryId);
+
+        log.debug("피드 읽음 처리 완료 - memberId: {}, feedEntryId: {}", memberId, feedEntryId);
+        return true;
     }
 }

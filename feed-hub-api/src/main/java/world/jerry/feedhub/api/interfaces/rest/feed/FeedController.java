@@ -53,9 +53,17 @@ public class FeedController {
         return ResponseEntity.ok(FeedEntryResponse.from(feedEntryInfo));
     }
 
+    /**
+     * 피드 읽음 처리 및 조회수 증가
+     * 로그인 상태: 읽음 기록 저장 + 조회수 증가 (최초 1회만)
+     * 비로그인 상태: 조회수만 증가
+     */
     @PostMapping("/{id}/view")
-    public ResponseEntity<Void> incrementViewCount(@PathVariable Long id) {
-        feedEntryService.incrementViewCount(id);
+    public ResponseEntity<Void> markAsRead(
+            @AuthenticationPrincipal Long memberId,
+            @PathVariable Long id
+    ) {
+        feedEntryService.markAsRead(id, memberId);
         return ResponseEntity.ok().build();
     }
 }
