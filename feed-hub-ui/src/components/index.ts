@@ -5,3 +5,4 @@ export { AdminModal } from './AdminModal';
 export { AdminButton } from './AdminButton';
 export { TagSelectModal } from './TagSelectModal';
 export { AuthModal } from './AuthModal';
+export { ContentPreviewModal } from './ContentPreviewModal';

@@ -1,5 +1,7 @@
+import { useState } from 'react';
 import type { FeedEntry } from '../types';
 import { feedApi } from '../api/client';
+import { ContentPreviewModal } from './ContentPreviewModal';
 import './FeedCard.css';
 
 interface FeedCardProps {
@@ -22,6 +24,8 @@ function formatDate(dateString: string | null): string {
 }
 
 export function FeedCard({ feed, onAddTag, onTagClick, onViewCountUpdate }: FeedCardProps) {
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+
   const handleViewClick = () => {
     // 조회수 증가 API 호출 (비동기, 에러 무시)
     feedApi.incrementViewCount(feed.id).then(() => {
@@ -81,6 +85,13 @@ export function FeedCard({ feed, onAddTag, onTagClick, onViewCountUpdate }: Feed
           >
             태그추가
           </button>
+          <button
+            type="button"
+            className="btn-preview"
+            onClick={() => setIsPreviewOpen(true)}
+          >
+            미리보기
+          </button>
           <a
             href={feed.link}
             target="_blank"
@@ -92,6 +103,14 @@ export function FeedCard({ feed, onAddTag, onTagClick, onViewCountUpdate }: Feed
           </a>
         </div>
       </div>
+
+      <ContentPreviewModal
+        isOpen={isPreviewOpen}
+        title={feed.title}
+        content={feed.description}
+        link={feed.link}
+        onClose={() => setIsPreviewOpen(false)}
+      />
     </div>
   );
 }

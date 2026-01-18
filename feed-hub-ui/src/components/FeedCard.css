@@ -112,6 +112,22 @@
   color: #333;
 }
 
+.btn-preview {
+  padding: 4px 10px;
+  background: #e3f2fd;
+  color: #1976d2;
+  border: 1px solid #bbdefb;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-preview:hover {
+  background: #bbdefb;
+  border-color: #90caf9;
+}
+
 .feed-link {
   color: #1976d2;
   text-decoration: none;
@@ -142,6 +158,11 @@
   }
 
   .btn-add-tag {
+    font-size: 0.75rem;
+    padding: 3px 8px;
+  }
+
+  .btn-preview {
     font-size: 0.75rem;
     padding: 3px 8px;
   }
