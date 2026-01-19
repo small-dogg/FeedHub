@@ -1,3 +1,5 @@
+export type BlogType = 'TISTORY' | 'MEDIUM' | 'VELOG' | 'GITHUB_BLOG' | 'UNKNOWN';
+
 export interface Tag {
   id: number;
   name: string;
@@ -11,6 +13,7 @@ export interface RssSource {
   rssUrl: string;
   siteUrl: string | null;
   language: string | null;
+  blogType: BlogType | null;
   createdAt: string;
   lastSyncAt: string | null;
   tags?: Tag[];
@@ -74,10 +77,13 @@ export interface OpmlImportResult {
 }
 
 // Auth types
+export type Role = 'USER' | 'ADMIN';
+
 export interface User {
   id: number;
   email: string;
   nickname: string;
+  role: Role;
 }
 
 export interface AuthResponse {

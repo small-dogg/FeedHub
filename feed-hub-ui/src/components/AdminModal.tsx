@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import type { RssSource, Tag } from '../types';
+import type { RssSource, Tag, BlogType } from '../types';
 import { rssSourceApi, tagApi } from '../api/client';
 import './AdminModal.css';
 
@@ -7,6 +7,8 @@ interface AdminModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
+
+const BLOG_TYPES: BlogType[] = ['TISTORY', 'MEDIUM', 'VELOG', 'GITHUB_BLOG', 'UNKNOWN'];
 
 export function AdminModal({ isOpen, onClose }: AdminModalProps) {
   const [activeTab, setActiveTab] = useState<'sources' | 'tags'>('sources');
@@ -19,17 +21,23 @@ export function AdminModal({ isOpen, onClose }: AdminModalProps) {
   const [crawlingAll, setCrawlingAll] = useState(false);
   const [importing, setImporting] = useState(false);
   const [exporting, setExporting] = useState(false);
+  const [adding, setAdding] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Form states
-  const [newSource, setNewSource] = useState({
+  const [newRssUrl, setNewRssUrl] = useState('');
+  const [newTagName, setNewTagName] = useState('');
+
+  // Edit state
+  const [editingSource, setEditingSource] = useState<RssSource | null>(null);
+  const [editForm, setEditForm] = useState({
     blogName: '',
     author: '',
-    rssUrl: '',
     siteUrl: '',
-    language: 'ko',
+    language: '',
+    blogType: '' as BlogType | '',
   });
-  const [newTagName, setNewTagName] = useState('');
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
@@ -40,7 +48,6 @@ export function AdminModal({ isOpen, onClose }: AdminModalProps) {
   const fetchData = async () => {
     setLoading(true);
     try {
-      // RSS 소스는 인증 불필요
       const sourcesData = await rssSourceApi.getAll();
       setRssSources(sourcesData);
     } catch (error) {
@@ -48,7 +55,6 @@ export function AdminModal({ isOpen, onClose }: AdminModalProps) {
     }
 
     try {
-      // 태그는 인증 필요
       const tagsData = await tagApi.getAll();
       setTags(tagsData);
     } catch (error) {
@@ -61,23 +67,20 @@ export function AdminModal({ isOpen, onClose }: AdminModalProps) {
 
   const handleAddSource = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newSource.blogName || !newSource.rssUrl) {
-      alert('블로그 이름과 RSS URL은 필수입니다.');
+    if (!newRssUrl.trim()) {
+      alert('RSS URL을 입력하세요.');
       return;
     }
+    setAdding(true);
     try {
-      await rssSourceApi.create({
-        blogName: newSource.blogName,
-        author: newSource.author || undefined,
-        rssUrl: newSource.rssUrl,
-        siteUrl: newSource.siteUrl || undefined,
-        language: newSource.language || undefined,
-      });
-      setNewSource({ blogName: '', author: '', rssUrl: '', siteUrl: '', language: 'ko' });
+      await rssSourceApi.create(newRssUrl.trim());
+      setNewRssUrl('');
       fetchData();
     } catch (error) {
       console.error('RSS 소스 추가 실패:', error);
-      alert('RSS 소스 추가에 실패했습니다.');
+      alert('RSS 소스 추가에 실패했습니다.\nRSS URL이 올바른지 확인해주세요.');
+    } finally {
+      setAdding(false);
     }
   };
 
@@ -90,6 +93,42 @@ export function AdminModal({ isOpen, onClose }: AdminModalProps) {
       console.error('RSS 소스 삭제 실패:', error);
       alert('RSS 소스 삭제에 실패했습니다.');
     }
+  };
+
+  const handleEditSource = (source: RssSource) => {
+    setEditingSource(source);
+    setEditForm({
+      blogName: source.blogName,
+      author: source.author || '',
+      siteUrl: source.siteUrl || '',
+      language: source.language || '',
+      blogType: source.blogType || '',
+    });
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingSource) return;
+    setSaving(true);
+    try {
+      await rssSourceApi.update(editingSource.id, {
+        blogName: editForm.blogName || undefined,
+        author: editForm.author || undefined,
+        siteUrl: editForm.siteUrl || undefined,
+        language: editForm.language || undefined,
+        blogType: editForm.blogType || undefined,
+      });
+      setEditingSource(null);
+      fetchData();
+    } catch (error) {
+      console.error('RSS 소스 수정 실패:', error);
+      alert('RSS 소스 수정에 실패했습니다.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditingSource(null);
   };
 
   const handleAddTag = async (e: React.FormEvent) => {
@@ -220,6 +259,8 @@ export function AdminModal({ isOpen, onClose }: AdminModalProps) {
     }
   };
 
+  const isActionDisabled = syncingAll || syncingId !== null || crawlingAll || crawlingId !== null;
+
   if (!isOpen) return null;
 
   return (
@@ -264,7 +305,7 @@ export function AdminModal({ isOpen, onClose }: AdminModalProps) {
                   type="button"
                   className="btn btn-opml-import"
                   onClick={() => fileInputRef.current?.click()}
-                  disabled={importing || exporting || syncingAll || syncingId !== null}
+                  disabled={importing || exporting || isActionDisabled}
                 >
                   {importing ? '가져오는 중...' : 'OPML 가져오기'}
                 </button>
@@ -272,7 +313,7 @@ export function AdminModal({ isOpen, onClose }: AdminModalProps) {
                   type="button"
                   className="btn btn-opml-export"
                   onClick={handleExportOpml}
-                  disabled={importing || exporting || syncingAll || syncingId !== null || rssSources.length === 0}
+                  disabled={importing || exporting || isActionDisabled || rssSources.length === 0}
                 >
                   {exporting ? '내보내는 중...' : 'OPML 내보내기'}
                 </button>
@@ -282,55 +323,17 @@ export function AdminModal({ isOpen, onClose }: AdminModalProps) {
                 <h4>새 RSS 소스 추가</h4>
                 <div className="form-row">
                   <input
-                    type="text"
-                    placeholder="블로그 이름 *"
-                    value={newSource.blogName}
-                    onChange={(e) =>
-                      setNewSource({ ...newSource, blogName: e.target.value })
-                    }
-                  />
-                  <input
-                    type="text"
-                    placeholder="작성자"
-                    value={newSource.author}
-                    onChange={(e) =>
-                      setNewSource({ ...newSource, author: e.target.value })
-                    }
-                  />
-                </div>
-                <div className="form-row">
-                  <input
                     type="url"
-                    placeholder="RSS URL *"
-                    value={newSource.rssUrl}
-                    onChange={(e) =>
-                      setNewSource({ ...newSource, rssUrl: e.target.value })
-                    }
+                    placeholder="RSS URL을 입력하세요"
+                    value={newRssUrl}
+                    onChange={(e) => setNewRssUrl(e.target.value)}
+                    disabled={adding}
                   />
+                  <button type="submit" className="btn btn-primary" disabled={adding}>
+                    {adding ? '추가 중...' : '추가'}
+                  </button>
                 </div>
-                <div className="form-row">
-                  <input
-                    type="url"
-                    placeholder="사이트 URL"
-                    value={newSource.siteUrl}
-                    onChange={(e) =>
-                      setNewSource({ ...newSource, siteUrl: e.target.value })
-                    }
-                  />
-                  <select
-                    value={newSource.language}
-                    onChange={(e) =>
-                      setNewSource({ ...newSource, language: e.target.value })
-                    }
-                  >
-                    <option value="ko">한국어</option>
-                    <option value="en">영어</option>
-                    <option value="ja">일본어</option>
-                  </select>
-                </div>
-                <button type="submit" className="btn btn-primary">
-                  추가
-                </button>
+                <p className="form-hint">RSS URL만 입력하면 블로그 정보가 자동으로 수집됩니다.</p>
               </form>
 
               <div className="admin-list">
@@ -341,14 +344,14 @@ export function AdminModal({ isOpen, onClose }: AdminModalProps) {
                       <button
                         className="btn btn-sync-all"
                         onClick={handleSyncAll}
-                        disabled={syncingAll || syncingId !== null || crawlingAll || crawlingId !== null}
+                        disabled={isActionDisabled}
                       >
                         {syncingAll ? '동기화 중...' : '전체 동기화'}
                       </button>
                       <button
                         className="btn btn-crawl-all"
                         onClick={handleCrawlAll}
-                        disabled={syncingAll || syncingId !== null || crawlingAll || crawlingId !== null}
+                        disabled={isActionDisabled}
                       >
                         {crawlingAll ? '크롤링 중...' : '전체 크롤링'}
                       </button>
@@ -361,38 +364,125 @@ export function AdminModal({ isOpen, onClose }: AdminModalProps) {
                   <ul>
                     {rssSources.map((source) => (
                       <li key={source.id}>
-                        <div className="list-item-info">
-                          <strong>{source.blogName}</strong>
-                          <span className="list-item-url">{source.rssUrl}</span>
-                          {source.lastSyncAt && (
-                            <span className="list-item-sync-time">
-                              마지막 동기화: {new Date(source.lastSyncAt).toLocaleString('ko-KR')}
-                            </span>
-                          )}
-                        </div>
-                        <div className="list-item-actions">
-                          <button
-                            className="btn-sync"
-                            onClick={() => handleSync(source.id)}
-                            disabled={syncingId !== null || syncingAll || crawlingId !== null || crawlingAll}
-                          >
-                            {syncingId === source.id ? '동기화 중...' : '동기화'}
-                          </button>
-                          <button
-                            className="btn-crawl"
-                            onClick={() => handleCrawl(source.id)}
-                            disabled={syncingId !== null || syncingAll || crawlingId !== null || crawlingAll}
-                          >
-                            {crawlingId === source.id ? '크롤링 중...' : '크롤링'}
-                          </button>
-                          <button
-                            className="btn-delete"
-                            onClick={() => handleDeleteSource(source.id)}
-                            disabled={syncingId !== null || syncingAll || crawlingId !== null || crawlingAll}
-                          >
-                            삭제
-                          </button>
-                        </div>
+                        {editingSource?.id === source.id ? (
+                          <div className="edit-form">
+                            <div className="edit-form-row">
+                              <label>블로그 이름</label>
+                              <input
+                                type="text"
+                                value={editForm.blogName}
+                                onChange={(e) => setEditForm({ ...editForm, blogName: e.target.value })}
+                              />
+                            </div>
+                            <div className="edit-form-row">
+                              <label>작성자</label>
+                              <input
+                                type="text"
+                                value={editForm.author}
+                                onChange={(e) => setEditForm({ ...editForm, author: e.target.value })}
+                              />
+                            </div>
+                            <div className="edit-form-row">
+                              <label>사이트 URL</label>
+                              <input
+                                type="url"
+                                value={editForm.siteUrl}
+                                onChange={(e) => setEditForm({ ...editForm, siteUrl: e.target.value })}
+                              />
+                            </div>
+                            <div className="edit-form-row">
+                              <label>언어</label>
+                              <select
+                                value={editForm.language}
+                                onChange={(e) => setEditForm({ ...editForm, language: e.target.value })}
+                              >
+                                <option value="">자동</option>
+                                <option value="ko">한국어</option>
+                                <option value="en">영어</option>
+                                <option value="ja">일본어</option>
+                              </select>
+                            </div>
+                            <div className="edit-form-row">
+                              <label>블로그 타입</label>
+                              <select
+                                value={editForm.blogType}
+                                onChange={(e) => setEditForm({ ...editForm, blogType: e.target.value as BlogType | '' })}
+                              >
+                                <option value="">선택</option>
+                                {BLOG_TYPES.map((type) => (
+                                  <option key={type} value={type}>{type}</option>
+                                ))}
+                              </select>
+                            </div>
+                            <div className="edit-form-actions">
+                              <button
+                                type="button"
+                                className="btn btn-primary"
+                                onClick={handleSaveEdit}
+                                disabled={saving}
+                              >
+                                {saving ? '저장 중...' : '저장'}
+                              </button>
+                              <button
+                                type="button"
+                                className="btn btn-secondary"
+                                onClick={handleCancelEdit}
+                                disabled={saving}
+                              >
+                                취소
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <>
+                            <div className="list-item-info">
+                              <div className="list-item-title">
+                                <strong>{source.blogName}</strong>
+                                {source.blogType && (
+                                  <span className={`blog-type-badge blog-type-${source.blogType.toLowerCase()}`}>
+                                    {source.blogType}
+                                  </span>
+                                )}
+                              </div>
+                              <span className="list-item-url">{source.rssUrl}</span>
+                              {source.lastSyncAt && (
+                                <span className="list-item-sync-time">
+                                  마지막 동기화: {new Date(source.lastSyncAt).toLocaleString('ko-KR')}
+                                </span>
+                              )}
+                            </div>
+                            <div className="list-item-actions">
+                              <button
+                                className="btn-edit"
+                                onClick={() => handleEditSource(source)}
+                                disabled={isActionDisabled}
+                              >
+                                수정
+                              </button>
+                              <button
+                                className="btn-sync"
+                                onClick={() => handleSync(source.id)}
+                                disabled={isActionDisabled}
+                              >
+                                {syncingId === source.id ? '동기화 중...' : '동기화'}
+                              </button>
+                              <button
+                                className="btn-crawl"
+                                onClick={() => handleCrawl(source.id)}
+                                disabled={isActionDisabled}
+                              >
+                                {crawlingId === source.id ? '크롤링 중...' : '크롤링'}
+                              </button>
+                              <button
+                                className="btn-delete"
+                                onClick={() => handleDeleteSource(source.id)}
+                                disabled={isActionDisabled}
+                              >
+                                삭제
+                              </button>
+                            </div>
+                          </>
+                        )}
                       </li>
                     ))}
                   </ul>

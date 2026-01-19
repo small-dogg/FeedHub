@@ -1,5 +1,6 @@
 package world.jerry.feedhub.api.application.rss.dto;
 
+import world.jerry.feedhub.api.domain.rss.BlogType;
 import world.jerry.feedhub.api.domain.rss.RssInfo;
 
 import java.time.Instant;
@@ -11,6 +12,7 @@ public record RssInfoDetail(
         String rssUrl,
         String siteUrl,
         String language,
+        BlogType blogType,
         Instant createdAt,
         Instant lastSyncAt
 ) {
@@ -22,6 +24,7 @@ public record RssInfoDetail(
                 rssInfo.getRssUrl(),
                 rssInfo.getSiteUrl(),
                 rssInfo.getLanguage(),
+                rssInfo.getBlogType(),
                 rssInfo.getCreatedAt(),
                 rssInfo.getLastSyncAt()
         );

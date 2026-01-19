@@ -26,6 +26,10 @@ public class Member {
     @Column(name = "nickname", nullable = false, length = 50)
     private String nickname;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "role", nullable = false, length = 20)
+    private Role role;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
@@ -36,7 +40,12 @@ public class Member {
         this.email = email;
         this.password = encodedPassword;
         this.nickname = nickname;
+        this.role = Role.USER;
         this.createdAt = Instant.now();
+    }
+
+    public boolean isAdmin() {
+        return this.role == Role.ADMIN;
     }
 
     public void updateNickname(String nickname) {

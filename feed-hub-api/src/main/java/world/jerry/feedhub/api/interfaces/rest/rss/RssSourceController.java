@@ -16,12 +16,14 @@ import world.jerry.feedhub.api.application.rss.RssInfoService;
 import world.jerry.feedhub.api.application.rss.RssSyncService;
 import world.jerry.feedhub.api.application.rss.dto.OpmlImportResult;
 import world.jerry.feedhub.api.application.rss.dto.RssInfoDetail;
+import world.jerry.feedhub.api.domain.rss.BlogType;
 import world.jerry.feedhub.api.domain.rss.CrawlMode;
 import world.jerry.feedhub.api.interfaces.rest.rss.dto.CrawlResponse;
 import world.jerry.feedhub.api.interfaces.rest.rss.dto.OpmlImportResponse;
 import world.jerry.feedhub.api.interfaces.rest.rss.dto.RegisterRssSourceRequest;
 import world.jerry.feedhub.api.interfaces.rest.rss.dto.RssSourceResponse;
 import world.jerry.feedhub.api.interfaces.rest.rss.dto.SyncResponse;
+import world.jerry.feedhub.api.interfaces.rest.rss.dto.UpdateRssSourceRequest;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -93,6 +95,21 @@ public class RssSourceController {
                 .map(info -> CrawlResponse.from(crawlService.requestCrawl(info.id(), mode)))
                 .toList();
         return ResponseEntity.ok(results);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<RssSourceResponse> updateRssSource(
+            @PathVariable Long id,
+            @Valid @RequestBody UpdateRssSourceRequest request) {
+        RssInfoDetail detail = rssInfoService.updateRssInfo(
+                id,
+                request.blogName(),
+                request.author(),
+                request.siteUrl(),
+                request.language(),
+                request.blogType()
+        );
+        return ResponseEntity.ok(RssSourceResponse.from(detail));
     }
 
     @PostMapping("/import/opml")

@@ -28,7 +28,12 @@ public class CrawlRequestProducer {
      * UNKNOWN 타입은 크롤링 대상이 아니므로 발행하지 않음
      */
     public void sendCrawlRequest(RssInfo rssInfo, CrawlMode crawlMode) {
-        BlogType blogType = blogTypeDetector.detect(rssInfo.getSiteUrl(), rssInfo.getRssUrl());
+        BlogType blogType;
+        if (rssInfo.getBlogType().equals(BlogType.UNKNOWN)) {
+            blogType = blogTypeDetector.detect(rssInfo.getSiteUrl(), rssInfo.getRssUrl());
+        } else {
+            blogType = rssInfo.getBlogType();
+        }
 
         if (blogType == BlogType.UNKNOWN) {
             log.debug("Skipping crawl request for UNKNOWN blog type: rssInfoId={}", rssInfo.getId());

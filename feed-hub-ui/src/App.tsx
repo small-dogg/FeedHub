@@ -234,8 +234,12 @@ function App() {
         )}
       </main>
 
-      <AdminButton onClick={() => setIsAdminOpen(true)} />
-      <AdminModal isOpen={isAdminOpen} onClose={() => setIsAdminOpen(false)} />
+      {user?.role === 'ADMIN' && (
+        <>
+          <AdminButton onClick={() => setIsAdminOpen(true)} />
+          <AdminModal isOpen={isAdminOpen} onClose={() => setIsAdminOpen(false)} />
+        </>
+      )}
       <TagSelectModal
         isOpen={isTagModalOpen}
         feedId={tagModalFeedId}

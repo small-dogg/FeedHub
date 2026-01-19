@@ -2,6 +2,7 @@ package world.jerry.feedhub.api.interfaces.rest.auth.dto;
 
 import world.jerry.feedhub.api.application.auth.dto.AuthResult;
 import world.jerry.feedhub.api.application.auth.dto.MemberInfo;
+import world.jerry.feedhub.api.domain.member.Role;
 
 public record AuthResponse(
         String accessToken,
@@ -10,10 +11,11 @@ public record AuthResponse(
     public record UserInfo(
             Long id,
             String email,
-            String nickname
+            String nickname,
+            Role role
     ) {
         public static UserInfo from(MemberInfo member) {
-            return new UserInfo(member.id(), member.email(), member.nickname());
+            return new UserInfo(member.id(), member.email(), member.nickname(), member.role());
         }
     }
 

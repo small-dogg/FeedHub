@@ -16,8 +16,8 @@
   background: #fff;
   border-radius: 12px;
   width: 100%;
-  max-width: 600px;
-  max-height: 80vh;
+  max-width: 800px;
+  max-height: 85vh;
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -158,6 +158,12 @@
   margin-bottom: 0;
 }
 
+.form-hint {
+  font-size: 0.8rem;
+  color: #888;
+  margin: 8px 0 0 0;
+}
+
 .form-row input,
 .form-row select {
   flex: 1;
@@ -198,6 +204,127 @@
 
 .list-item-info strong {
   font-size: 0.95rem;
+}
+
+.list-item-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.blog-type-badge {
+  font-size: 0.7rem;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 500;
+  text-transform: uppercase;
+}
+
+.blog-type-tistory {
+  background: #eb5e28;
+  color: #fff;
+}
+
+.blog-type-velog {
+  background: #20c997;
+  color: #fff;
+}
+
+.blog-type-medium {
+  background: #000;
+  color: #fff;
+}
+
+.blog-type-github_blog {
+  background: #24292e;
+  color: #fff;
+}
+
+.blog-type-unknown {
+  background: #9e9e9e;
+  color: #fff;
+}
+
+/* Edit form styles */
+.edit-form {
+  width: 100%;
+  background: #f9f9f9;
+  padding: 12px;
+  border-radius: 8px;
+}
+
+.edit-form-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.edit-form-row label {
+  width: 80px;
+  font-size: 0.85rem;
+  color: #666;
+  flex-shrink: 0;
+}
+
+.edit-form-row input,
+.edit-form-row select {
+  flex: 1;
+  padding: 8px 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 0.85rem;
+}
+
+.edit-form-row input:focus,
+.edit-form-row select:focus {
+  outline: none;
+  border-color: #1976d2;
+}
+
+.edit-form-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+  justify-content: flex-end;
+}
+
+.btn-secondary {
+  background: #9e9e9e;
+  color: #fff;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: #757575;
+}
+
+.btn-secondary:disabled {
+  background: #bdbdbd;
+  cursor: not-allowed;
+}
+
+.btn-edit {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 4px;
+  background: #ff9800;
+  color: #fff;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.btn-edit:hover:not(:disabled) {
+  background: #f57c00;
+}
+
+.btn-edit:disabled {
+  background: #bdbdbd;
+  cursor: not-allowed;
 }
 
 .list-item-url {
@@ -360,9 +487,25 @@
     width: 100%;
   }
 
+  .btn-edit,
   .btn-sync,
   .btn-crawl,
   .btn-delete {
     flex: 1;
+  }
+
+  .edit-form-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .edit-form-row label {
+    width: auto;
+    margin-bottom: 4px;
+  }
+
+  .edit-form-row input,
+  .edit-form-row select {
+    width: 100%;
   }
 }

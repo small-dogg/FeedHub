@@ -12,6 +12,7 @@ import java.time.Instant;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * RSS/Atom 피드 파서
@@ -20,6 +21,26 @@ import java.util.List;
 @Slf4j
 @Component
 public class RssParser {
+
+    /**
+     * RSS URL에서 피드 메타데이터 조회 (blogName, author, siteUrl)
+     */
+    public Optional<FeedMetadata> fetchMetadata(String rssUrl) {
+        try {
+            SyndFeedInput input = new SyndFeedInput();
+            SyndFeed feed = input.build(new XmlReader(URI.create(rssUrl).toURL()));
+
+            return Optional.of(new FeedMetadata(
+                    truncate(feed.getTitle(), 255),
+                    truncate(feed.getAuthor(), 255),
+                    truncate(feed.getLink(), 2048),
+                    truncate(feed.getLanguage(), 10)
+            ));
+        } catch (Exception e) {
+            log.error("RSS 메타데이터 조회 실패: url={}, error={}", rssUrl, e.getMessage());
+            return Optional.empty();
+        }
+    }
 
     /**
      * RSS URL에서 피드 엔트리를 파싱

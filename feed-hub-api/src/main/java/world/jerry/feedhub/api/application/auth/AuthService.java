@@ -41,7 +41,7 @@ public class AuthService {
 
         return new AuthResult(
                 accessToken,
-                new MemberInfo(savedMember.getId(), savedMember.getEmail(), savedMember.getNickname())
+                toMemberInfo(savedMember)
         );
     }
 
@@ -60,7 +60,7 @@ public class AuthService {
 
         return new AuthResult(
                 accessToken,
-                new MemberInfo(member.getId(), member.getEmail(), member.getNickname())
+                toMemberInfo(member)
         );
     }
 
@@ -74,6 +74,10 @@ public class AuthService {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new IllegalArgumentException("회원을 찾을 수 없습니다."));
 
-        return new MemberInfo(member.getId(), member.getEmail(), member.getNickname());
+        return toMemberInfo(member);
+    }
+
+    private MemberInfo toMemberInfo(Member member) {
+        return new MemberInfo(member.getId(), member.getEmail(), member.getNickname(), member.getRole());
     }
 }

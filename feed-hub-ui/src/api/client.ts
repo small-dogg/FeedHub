@@ -83,15 +83,19 @@ export const rssSourceApi = {
     return response.data;
   },
 
-  create: async (data: {
-    blogName: string;
+  create: async (rssUrl: string): Promise<RssSource> => {
+    const response = await api.post<RssSource>('/rss-sources', { rssUrl });
+    return response.data;
+  },
+
+  update: async (id: number, data: {
+    blogName?: string;
     author?: string;
-    rssUrl: string;
     siteUrl?: string;
     language?: string;
-    tagIds?: number[];
+    blogType?: string;
   }): Promise<RssSource> => {
-    const response = await api.post<RssSource>('/rss-sources', data);
+    const response = await api.put<RssSource>(`/rss-sources/${id}`, data);
     return response.data;
   },
 

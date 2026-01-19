@@ -32,22 +32,43 @@ public class RssInfo {
     @Column(name = "language", length = 10)
     private String language;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "blog_type", length = 20)
+    private BlogType blogType;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
     @Column(name = "last_sync_at")
     private Instant lastSyncAt;
 
-    public RssInfo(String blogName, String author, String rssUrl, String siteUrl, String language) {
+    public RssInfo(String blogName, String author, String rssUrl, String siteUrl, String language, BlogType blogType) {
         this.blogName = blogName;
         this.author = author;
         this.rssUrl = rssUrl;
         this.siteUrl = siteUrl;
         this.language = language;
+        this.blogType = blogType != null ? blogType : BlogType.UNKNOWN;
         this.createdAt = Instant.now();
     }
 
     public void updateLastSyncAt(Instant syncTime) {
         this.lastSyncAt = syncTime;
+    }
+
+    public void updateBlogType(BlogType blogType) {
+        this.blogType = blogType;
+    }
+
+    public void update(String blogName, String author, String siteUrl, String language, BlogType blogType) {
+        if (blogName != null && !blogName.isBlank()) {
+            this.blogName = blogName;
+        }
+        this.author = author;
+        this.siteUrl = siteUrl;
+        this.language = language;
+        if (blogType != null) {
+            this.blogType = blogType;
+        }
     }
 }

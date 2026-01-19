@@ -26,13 +26,17 @@ public class CrawlService {
 
     /**
      * 특정 RSS 소스에 대한 크롤링 요청
+     *
      * @return 크롤링 요청 결과 (블로그 타입, 요청 성공 여부)
      */
     public CrawlRequestResult requestCrawl(Long rssInfoId, CrawlMode crawlMode) {
         RssInfo rssInfo = rssInfoRepository.findById(rssInfoId)
                 .orElseThrow(() -> new NoSuchElementException("RSS source not found: " + rssInfoId));
 
-        BlogType blogType = blogTypeDetector.detect(rssInfo.getSiteUrl(), rssInfo.getRssUrl());
+        BlogType blogType = rssInfo.getBlogType();
+        if (blogType == null || blogType.equals(BlogType.UNKNOWN)) {
+            blogType = blogTypeDetector.detect(rssInfo.getSiteUrl(), rssInfo.getRssUrl());
+        }
 
         if (blogType == BlogType.UNKNOWN) {
             log.info("Skipping crawl for UNKNOWN blog type: id={}, name={}",
@@ -60,5 +64,6 @@ public class CrawlService {
             BlogType blogType,
             boolean requested,
             String message
-    ) {}
+    ) {
+    }
 }
