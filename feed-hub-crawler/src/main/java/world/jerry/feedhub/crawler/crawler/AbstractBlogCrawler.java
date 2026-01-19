@@ -10,7 +10,9 @@ import world.jerry.feedhub.crawler.message.CrawlRequestMessage;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * 공통 크롤링 로직 제공
@@ -35,6 +37,7 @@ public abstract class AbstractBlogCrawler implements BlogCrawler {
                 request.rssInfoId(), getSupportedType(), request.crawlMode());
 
         List<CrawledArticle> allArticles = new ArrayList<>();
+        Set<String> seenUrls = new HashSet<>();
         int pageCount = 0;
 
         try {
@@ -52,7 +55,20 @@ public abstract class AbstractBlogCrawler implements BlogCrawler {
                     break;
                 }
 
-                allArticles.addAll(articles);
+                // 새로운 아티클만 필터링 (이미 수집한 URL 제외)
+                List<CrawledArticle> newArticles = articles.stream()
+                        .filter(article -> !seenUrls.contains(article.link()))
+                        .toList();
+
+                // 모든 아티클이 중복이면 마지막 페이지로 판단하고 종료
+                if (newArticles.isEmpty()) {
+                    log.debug("All articles on page {} are duplicates, stopping crawl", page);
+                    break;
+                }
+
+                // 수집한 URL 기록
+                newArticles.forEach(article -> seenUrls.add(article.link()));
+                allArticles.addAll(newArticles);
                 pageCount = page;
 
                 // Rate limiting
