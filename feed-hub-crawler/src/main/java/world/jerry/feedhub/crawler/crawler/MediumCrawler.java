@@ -68,6 +68,7 @@ public class MediumCrawler extends AbstractBlogCrawler {
             }
         }
 
+        log.info("Parsed {} articles from Medium page", articles.size());
         return articles;
     }
 

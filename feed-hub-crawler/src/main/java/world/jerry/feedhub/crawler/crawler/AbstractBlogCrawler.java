@@ -24,11 +24,9 @@ public abstract class AbstractBlogCrawler implements BlogCrawler {
     protected static final String USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36";
 
     private final int maxPagesPerCrawl;
-    private final long requestDelayMs;
 
     protected AbstractBlogCrawler(int maxPagesPerCrawl, long requestDelayMs) {
         this.maxPagesPerCrawl = maxPagesPerCrawl;
-        this.requestDelayMs = requestDelayMs;
     }
 
     @Override
@@ -71,10 +69,7 @@ public abstract class AbstractBlogCrawler implements BlogCrawler {
                 allArticles.addAll(newArticles);
                 pageCount = page;
 
-                // Rate limiting
-                if (page < maxPages && requestDelayMs > 0) {
-                    Thread.sleep(requestDelayMs);
-                }
+                log.info("Page {} crawled: {} new articles (total: {})", page, newArticles.size(), allArticles.size());
             }
 
             log.info("Crawl completed: rssInfoId={}, pages={}, articles={}",

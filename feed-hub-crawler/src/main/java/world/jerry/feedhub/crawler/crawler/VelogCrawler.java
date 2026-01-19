@@ -92,14 +92,12 @@ public class VelogCrawler extends AbstractBlogCrawler {
                 allArticles.addAll(newArticles);
                 pageCount++;
 
-                // 다음 페이지를 위한 cursor 업데이트 (마지막 포스트의 ID)
-                // Velog GraphQL은 cursor로 마지막 포스트 ID 사용
-                if (articles.size() < 20) {  // 20개 미만이면 마지막 페이지
+                log.info("Page {} crawled: {} new articles (total: {})", pageCount, newArticles.size(), allArticles.size());
+
+                // 20개 미만이면 마지막 페이지
+                if (articles.size() < 20) {
                     break;
                 }
-
-                // Rate limiting
-                Thread.sleep(1000);
             }
 
             log.info("Velog crawl completed: rssInfoId={}, articles={}",
