@@ -9,12 +9,15 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import world.jerry.feedhub.api.application.rss.CrawlService;
 import world.jerry.feedhub.api.application.rss.OpmlExportService;
 import world.jerry.feedhub.api.application.rss.OpmlImportService;
 import world.jerry.feedhub.api.application.rss.RssInfoService;
 import world.jerry.feedhub.api.application.rss.RssSyncService;
 import world.jerry.feedhub.api.application.rss.dto.OpmlImportResult;
 import world.jerry.feedhub.api.application.rss.dto.RssInfoDetail;
+import world.jerry.feedhub.api.domain.rss.CrawlMode;
+import world.jerry.feedhub.api.interfaces.rest.rss.dto.CrawlResponse;
 import world.jerry.feedhub.api.interfaces.rest.rss.dto.OpmlImportResponse;
 import world.jerry.feedhub.api.interfaces.rest.rss.dto.RegisterRssSourceRequest;
 import world.jerry.feedhub.api.interfaces.rest.rss.dto.RssSourceResponse;
@@ -33,6 +36,7 @@ public class RssSourceController {
 
     private final RssInfoService rssInfoService;
     private final RssSyncService rssSyncService;
+    private final CrawlService crawlService;
     private final OpmlImportService opmlImportService;
     private final OpmlExportService opmlExportService;
 
@@ -71,6 +75,22 @@ public class RssSourceController {
     public ResponseEntity<List<SyncResponse>> syncAllRssSources() {
         List<SyncResponse> results = rssSyncService.syncAllRssSources().stream()
                 .map(SyncResponse::from)
+                .toList();
+        return ResponseEntity.ok(results);
+    }
+
+    @PostMapping("/{id}/crawl")
+    public ResponseEntity<CrawlResponse> crawlRssSource(
+            @PathVariable Long id,
+            @RequestParam(value = "mode", defaultValue = "FULL") CrawlMode mode) {
+        return ResponseEntity.ok(CrawlResponse.from(crawlService.requestCrawl(id, mode)));
+    }
+
+    @PostMapping("/crawl-all")
+    public ResponseEntity<List<CrawlResponse>> crawlAllRssSources(
+            @RequestParam(value = "mode", defaultValue = "FULL") CrawlMode mode) {
+        List<CrawlResponse> results = rssInfoService.getAllRssInfos().stream()
+                .map(info -> CrawlResponse.from(crawlService.requestCrawl(info.id(), mode)))
                 .toList();
         return ResponseEntity.ok(results);
     }

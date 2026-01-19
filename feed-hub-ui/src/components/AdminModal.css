@@ -240,19 +240,39 @@
   margin: 0;
 }
 
-.btn-sync-all {
-  background: #1976d2;
+.list-header-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-sync-all,
+.btn-crawl-all {
   color: #fff;
   padding: 8px 16px;
   border-radius: 4px;
   font-size: 0.85rem;
+  border: none;
+  cursor: pointer;
+}
+
+.btn-sync-all {
+  background: #1976d2;
 }
 
 .btn-sync-all:hover:not(:disabled) {
   background: #1565c0;
 }
 
-.btn-sync-all:disabled {
+.btn-crawl-all {
+  background: #9c27b0;
+}
+
+.btn-crawl-all:hover:not(:disabled) {
+  background: #7b1fa2;
+}
+
+.btn-sync-all:disabled,
+.btn-crawl-all:disabled {
   background: #bdbdbd;
   cursor: not-allowed;
 }
@@ -268,21 +288,34 @@
   flex-shrink: 0;
 }
 
-.btn-sync {
+.btn-sync,
+.btn-crawl {
   padding: 6px 12px;
   border: none;
   border-radius: 4px;
-  background: #4caf50;
   color: #fff;
   font-size: 0.8rem;
   cursor: pointer;
+}
+
+.btn-sync {
+  background: #4caf50;
 }
 
 .btn-sync:hover:not(:disabled) {
   background: #43a047;
 }
 
+.btn-crawl {
+  background: #9c27b0;
+}
+
+.btn-crawl:hover:not(:disabled) {
+  background: #7b1fa2;
+}
+
 .btn-sync:disabled,
+.btn-crawl:disabled,
 .btn-delete:disabled {
   background: #bdbdbd;
   cursor: not-allowed;
@@ -307,7 +340,13 @@
     gap: 8px;
   }
 
-  .btn-sync-all {
+  .list-header-actions {
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .btn-sync-all,
+  .btn-crawl-all {
     width: 100%;
   }
 
@@ -322,6 +361,7 @@
   }
 
   .btn-sync,
+  .btn-crawl,
   .btn-delete {
     flex: 1;
   }

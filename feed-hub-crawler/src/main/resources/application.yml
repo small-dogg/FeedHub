@@ -1,0 +1,42 @@
+spring:
+  application:
+    name: feed-hub-crawler
+
+  datasource:
+    url: jdbc:postgresql://jerry.world:32222/feed_hub
+    username: test
+    password: test
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:ektl wlsgod
+      ddl-auto: none
+    open-in-view: false
+    properties:
+      hibernate:
+        default_batch_fetch_size: 100
+
+  kafka:
+    bootstrap-servers: localhost:30092
+    consumer:
+      group-id: feed-hub-crawler-group
+      auto-offset-reset: earliest
+      enable-auto-commit: false
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: world.jerry.feedhub.crawler.message
+    listener:
+      ack-mode: manual_immediate
+      concurrency: 3
+
+logging:
+  level:
+    world.jerry.feedhub.crawler: DEBUG
+    org.springframework.kafka: INFO
+
+crawler:
+  max-pages-per-crawl: 1000
+  request-delay-ms: 1000
+  connection-timeout-ms: 10000
+  read-timeout-ms: 30000

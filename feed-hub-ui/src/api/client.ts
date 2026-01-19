@@ -6,6 +6,7 @@ import type {
   OpmlImportResult,
   RssSource,
   SyncResult,
+  CrawlResult,
   Tag,
   AuthResponse,
   SignUpRequest,
@@ -152,6 +153,16 @@ export const rssSourceApi = {
     link.click();
     document.body.removeChild(link);
     window.URL.revokeObjectURL(url);
+  },
+
+  crawl: async (id: number, mode: 'FULL' | 'INCREMENTAL' = 'FULL'): Promise<CrawlResult> => {
+    const response = await api.post<CrawlResult>(`/rss-sources/${id}/crawl?mode=${mode}`);
+    return response.data;
+  },
+
+  crawlAll: async (mode: 'FULL' | 'INCREMENTAL' = 'FULL'): Promise<CrawlResult[]> => {
+    const response = await api.post<CrawlResult[]>(`/rss-sources/crawl-all?mode=${mode}`);
+    return response.data;
   },
 };
 

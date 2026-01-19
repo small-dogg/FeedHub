@@ -15,6 +15,8 @@ export function AdminModal({ isOpen, onClose }: AdminModalProps) {
   const [loading, setLoading] = useState(false);
   const [syncingId, setSyncingId] = useState<number | null>(null);
   const [syncingAll, setSyncingAll] = useState(false);
+  const [crawlingId, setCrawlingId] = useState<number | null>(null);
+  const [crawlingAll, setCrawlingAll] = useState(false);
   const [importing, setImporting] = useState(false);
   const [exporting, setExporting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -38,17 +40,23 @@ export function AdminModal({ isOpen, onClose }: AdminModalProps) {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [sourcesData, tagsData] = await Promise.all([
-        rssSourceApi.getAll(),
-        tagApi.getAll(),
-      ]);
+      // RSS 소스는 인증 불필요
+      const sourcesData = await rssSourceApi.getAll();
       setRssSources(sourcesData);
+    } catch (error) {
+      console.error('RSS 소스 로드 실패:', error);
+    }
+
+    try {
+      // 태그는 인증 필요
+      const tagsData = await tagApi.getAll();
       setTags(tagsData);
     } catch (error) {
-      console.error('데이터 로드 실패:', error);
-    } finally {
-      setLoading(false);
+      console.error('태그 로드 실패 (로그인 필요):', error);
+      setTags([]);
     }
+
+    setLoading(false);
   };
 
   const handleAddSource = async (e: React.FormEvent) => {
@@ -139,6 +147,39 @@ export function AdminModal({ isOpen, onClose }: AdminModalProps) {
       alert('전체 동기화에 실패했습니다.');
     } finally {
       setSyncingAll(false);
+    }
+  };
+
+  const handleCrawl = async (id: number) => {
+    setCrawlingId(id);
+    try {
+      const result = await rssSourceApi.crawl(id);
+      if (result.requested) {
+        alert(`크롤링 요청 완료: ${result.blogName} (${result.blogType})`);
+      } else {
+        alert(`크롤링 요청 실패: ${result.message || '알 수 없는 오류'}`);
+      }
+    } catch (error) {
+      console.error('크롤링 요청 실패:', error);
+      alert('크롤링 요청에 실패했습니다.');
+    } finally {
+      setCrawlingId(null);
+    }
+  };
+
+  const handleCrawlAll = async () => {
+    if (!confirm('모든 RSS 소스를 크롤링하시겠습니까?\n(지원되는 블로그 타입만 크롤링됩니다)')) return;
+    setCrawlingAll(true);
+    try {
+      const results = await rssSourceApi.crawlAll();
+      const requested = results.filter(r => r.requested).length;
+      const skipped = results.filter(r => !r.requested).length;
+      alert(`전체 크롤링 요청 완료:\n- 요청됨: ${requested}개\n- 건너뜀: ${skipped}개 (미지원 타입)`);
+    } catch (error) {
+      console.error('전체 크롤링 요청 실패:', error);
+      alert('전체 크롤링 요청에 실패했습니다.');
+    } finally {
+      setCrawlingAll(false);
     }
   };
 
@@ -296,13 +337,22 @@ export function AdminModal({ isOpen, onClose }: AdminModalProps) {
                 <div className="list-header">
                   <h4>등록된 RSS 소스 ({rssSources.length})</h4>
                   {rssSources.length > 0 && (
-                    <button
-                      className="btn btn-sync-all"
-                      onClick={handleSyncAll}
-                      disabled={syncingAll || syncingId !== null}
-                    >
-                      {syncingAll ? '동기화 중...' : '전체 동기화'}
-                    </button>
+                    <div className="list-header-actions">
+                      <button
+                        className="btn btn-sync-all"
+                        onClick={handleSyncAll}
+                        disabled={syncingAll || syncingId !== null || crawlingAll || crawlingId !== null}
+                      >
+                        {syncingAll ? '동기화 중...' : '전체 동기화'}
+                      </button>
+                      <button
+                        className="btn btn-crawl-all"
+                        onClick={handleCrawlAll}
+                        disabled={syncingAll || syncingId !== null || crawlingAll || crawlingId !== null}
+                      >
+                        {crawlingAll ? '크롤링 중...' : '전체 크롤링'}
+                      </button>
+                    </div>
                   )}
                 </div>
                 {rssSources.length === 0 ? (
@@ -324,14 +374,21 @@ export function AdminModal({ isOpen, onClose }: AdminModalProps) {
                           <button
                             className="btn-sync"
                             onClick={() => handleSync(source.id)}
-                            disabled={syncingId !== null || syncingAll}
+                            disabled={syncingId !== null || syncingAll || crawlingId !== null || crawlingAll}
                           >
                             {syncingId === source.id ? '동기화 중...' : '동기화'}
                           </button>
                           <button
+                            className="btn-crawl"
+                            onClick={() => handleCrawl(source.id)}
+                            disabled={syncingId !== null || syncingAll || crawlingId !== null || crawlingAll}
+                          >
+                            {crawlingId === source.id ? '크롤링 중...' : '크롤링'}
+                          </button>
+                          <button
                             className="btn-delete"
                             onClick={() => handleDeleteSource(source.id)}
-                            disabled={syncingId !== null || syncingAll}
+                            disabled={syncingId !== null || syncingAll || crawlingId !== null || crawlingAll}
                           >
                             삭제
                           </button>

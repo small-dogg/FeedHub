@@ -10,6 +10,15 @@ spring:
     hibernate:
       ddl-auto: none
     open-in-view: false
+  kafka:
+    bootstrap-servers: localhost:30092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      acks: all
+      retries: 3
+      properties:
+        enable.idempotence: true
 server:
   port: 8080
 

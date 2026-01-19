@@ -13,7 +13,7 @@ export interface RssSource {
   language: string | null;
   createdAt: string;
   lastSyncAt: string | null;
-  tags: Tag[];
+  tags?: Tag[];
 }
 
 export interface FeedEntry {
@@ -55,6 +55,14 @@ export interface SyncResult {
   syncedCount: number;
   skippedCount: number;
   lastSyncAt: string;
+}
+
+export interface CrawlResult {
+  rssSourceId: number;
+  blogName: string;
+  blogType: string;
+  requested: boolean;
+  message: string | null;
 }
 
 export interface OpmlImportResult {
