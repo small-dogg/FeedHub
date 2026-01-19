@@ -33,6 +33,11 @@ public class VelogCrawler extends AbstractBlogCrawler {
     private static final Pattern USERNAME_PATTERN = Pattern.compile("velog\\.io/@([\\w-]+)");
     private static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
 
+    /**
+     * GraphQL 페이지 결과 (아티클 목록 + 다음 페이지 cursor)
+     */
+    private record VelogPageResult(List<CrawledArticle> articles, String lastCursor) {}
+
     private final OkHttpClient httpClient;
     private final ObjectMapper objectMapper;
     private final int maxPagesPerCrawl;
@@ -69,7 +74,8 @@ public class VelogCrawler extends AbstractBlogCrawler {
 
         try {
             for (int page = 0; page < maxPages; page++) {
-                List<CrawledArticle> articles = fetchPostsViaGraphQL(username, cursor, request.blogName());
+                VelogPageResult result = fetchPostsViaGraphQL(username, cursor, request.blogName());
+                List<CrawledArticle> articles = result.articles();
 
                 if (articles.isEmpty()) {
                     log.debug("No more articles found at page {}", page);
@@ -94,6 +100,9 @@ public class VelogCrawler extends AbstractBlogCrawler {
 
                 log.info("Page {} crawled: {} new articles (total: {})", pageCount, newArticles.size(), allArticles.size());
 
+                // 다음 페이지를 위한 cursor 업데이트
+                cursor = result.lastCursor();
+
                 // 20개 미만이면 마지막 페이지
                 if (articles.size() < 20) {
                     break;
@@ -111,7 +120,7 @@ public class VelogCrawler extends AbstractBlogCrawler {
         }
     }
 
-    private List<CrawledArticle> fetchPostsViaGraphQL(String username, String cursor, String blogName) throws Exception {
+    private VelogPageResult fetchPostsViaGraphQL(String username, String cursor, String blogName) throws Exception {
         String query = buildGraphQLQuery(username, cursor);
 
         RequestBody body = RequestBody.create(query, JSON);
@@ -144,17 +153,19 @@ public class VelogCrawler extends AbstractBlogCrawler {
                 """, username, cursorParam);
     }
 
-    private List<CrawledArticle> parseGraphQLResponse(String responseBody, String username, String blogName) throws Exception {
+    private VelogPageResult parseGraphQLResponse(String responseBody, String username, String blogName) throws Exception {
         List<CrawledArticle> articles = new ArrayList<>();
+        String lastCursor = null;
 
         JsonNode root = objectMapper.readTree(responseBody);
         JsonNode posts = root.path("data").path("posts");
 
         if (posts.isMissingNode() || !posts.isArray()) {
-            return articles;
+            return new VelogPageResult(articles, null);
         }
 
         for (JsonNode post : posts) {
+            String id = post.path("id").asText("");
             String title = post.path("title").asText("");
             String urlSlug = post.path("url_slug").asText("");
             String description = post.path("short_description").asText("");
@@ -163,6 +174,9 @@ public class VelogCrawler extends AbstractBlogCrawler {
             if (title.isBlank() || urlSlug.isBlank()) {
                 continue;
             }
+
+            // 마지막 포스트의 ID를 cursor로 사용
+            lastCursor = id;
 
             String link = "https://velog.io/@" + username + "/" + urlSlug;
 
@@ -182,7 +196,7 @@ public class VelogCrawler extends AbstractBlogCrawler {
                     .build());
         }
 
-        return articles;
+        return new VelogPageResult(articles, lastCursor);
     }
 
     private String extractUsername(String siteUrl, String rssUrl) {
