@@ -9,7 +9,7 @@ spring:
     driver-class-name: org.postgresql.Driver
 
   jpa:
-    hibernate:ektl wlsgod
+    hibernate:
       ddl-auto: none
     open-in-view: false
     properties:
