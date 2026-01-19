@@ -15,7 +15,9 @@ import world.jerry.feedhub.crawler.message.CrawlRequestMessage;
 
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -60,6 +62,7 @@ public class VelogCrawler extends AbstractBlogCrawler {
         }
 
         List<CrawledArticle> allArticles = new ArrayList<>();
+        Set<String> seenUrls = new HashSet<>();
         String cursor = null;
         int pageCount = 0;
         int maxPages = request.crawlMode() == CrawlMode.FULL ? maxPagesPerCrawl : 1;
@@ -69,10 +72,24 @@ public class VelogCrawler extends AbstractBlogCrawler {
                 List<CrawledArticle> articles = fetchPostsViaGraphQL(username, cursor, request.blogName());
 
                 if (articles.isEmpty()) {
+                    log.debug("No more articles found at page {}", page);
                     break;
                 }
 
-                allArticles.addAll(articles);
+                // 새로운 아티클만 필터링 (이미 수집한 URL 제외)
+                List<CrawledArticle> newArticles = articles.stream()
+                        .filter(article -> !seenUrls.contains(article.link()))
+                        .toList();
+
+                // 모든 아티클이 중복이면 마지막 페이지로 판단하고 종료
+                if (newArticles.isEmpty()) {
+                    log.debug("All articles on page {} are duplicates, stopping crawl", page);
+                    break;
+                }
+
+                // 수집한 URL 기록
+                newArticles.forEach(article -> seenUrls.add(article.link()));
+                allArticles.addAll(newArticles);
                 pageCount++;
 
                 // 다음 페이지를 위한 cursor 업데이트 (마지막 포스트의 ID)

@@ -19,7 +19,9 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -55,18 +57,31 @@ public class GithubBlogCrawler extends AbstractBlogCrawler {
         }
 
         List<CrawledArticle> allArticles = new ArrayList<>();
+        Set<String> seenUrls = new HashSet<>();
 
         try {
             // 1. sitemap.xml 시도
             List<CrawledArticle> sitemapArticles = crawlFromSitemap(baseUrl, request);
             if (!sitemapArticles.isEmpty()) {
-                allArticles.addAll(sitemapArticles);
-                log.info("Found {} articles from sitemap", sitemapArticles.size());
+                // 중복 제거
+                for (CrawledArticle article : sitemapArticles) {
+                    if (!seenUrls.contains(article.link())) {
+                        seenUrls.add(article.link());
+                        allArticles.add(article);
+                    }
+                }
+                log.info("Found {} articles from sitemap", allArticles.size());
             } else {
                 // 2. 메인 페이지 크롤링
                 List<CrawledArticle> htmlArticles = crawlFromHtml(baseUrl, request);
-                allArticles.addAll(htmlArticles);
-                log.info("Found {} articles from HTML", htmlArticles.size());
+                // 중복 제거
+                for (CrawledArticle article : htmlArticles) {
+                    if (!seenUrls.contains(article.link())) {
+                        seenUrls.add(article.link());
+                        allArticles.add(article);
+                    }
+                }
+                log.info("Found {} articles from HTML", allArticles.size());
             }
 
             return CrawlResult.success(request.rssInfoId(), allArticles, 1);
