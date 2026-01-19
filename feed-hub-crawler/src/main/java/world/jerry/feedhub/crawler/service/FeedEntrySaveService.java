@@ -8,6 +8,8 @@ import world.jerry.feedhub.crawler.domain.CrawledArticle;
 import world.jerry.feedhub.crawler.domain.FeedEntry;
 import world.jerry.feedhub.crawler.repository.FeedEntryRepository;
 
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 /**
@@ -30,13 +32,25 @@ public class FeedEntrySaveService {
 
         for (CrawledArticle article : articles) {
             try {
-                // 중복 체크 (link 기준)
-                if (feedEntryRepository.existsByLink(article.link())) {
+                String normalizedLink = normalizeUrl(article.link());
+
+                // 중복 체크 (원본 링크와 정규화된 링크 모두 확인)
+                if (feedEntryRepository.existsByLink(article.link()) ||
+                    feedEntryRepository.existsByLink(normalizedLink)) {
                     log.debug("Skipping duplicate article: {}", article.link());
                     continue;
                 }
 
-                FeedEntry feedEntry = FeedEntry.from(article, rssInfoId);
+                // 정규화된 링크로 저장
+                CrawledArticle normalizedArticle = CrawledArticle.builder()
+                        .title(article.title())
+                        .link(normalizedLink)
+                        .description(article.description())
+                        .author(article.author())
+                        .publishedAt(article.publishedAt())
+                        .build();
+
+                FeedEntry feedEntry = FeedEntry.from(normalizedArticle, rssInfoId);
                 feedEntryRepository.save(feedEntry);
                 savedCount++;
 
@@ -48,5 +62,17 @@ public class FeedEntrySaveService {
 
         log.info("Saved {} articles for rssInfoId={}", savedCount, rssInfoId);
         return savedCount;
+    }
+
+    /**
+     * URL 정규화 (디코딩하여 일관된 형식 유지)
+     */
+    private String normalizeUrl(String url) {
+        if (url == null) return null;
+        try {
+            return URLDecoder.decode(url, StandardCharsets.UTF_8);
+        } catch (Exception e) {
+            return url;
+        }
     }
 }

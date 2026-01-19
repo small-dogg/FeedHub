@@ -9,6 +9,8 @@ import world.jerry.feedhub.crawler.message.CrawlMode;
 import world.jerry.feedhub.crawler.message.CrawlRequestMessage;
 
 import java.io.IOException;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -53,9 +55,9 @@ public abstract class AbstractBlogCrawler implements BlogCrawler {
                     break;
                 }
 
-                // 새로운 아티클만 필터링 (이미 수집한 URL 제외)
+                // 새로운 아티클만 필터링 (이미 수집한 URL 제외, 정규화된 URL로 비교)
                 List<CrawledArticle> newArticles = articles.stream()
-                        .filter(article -> !seenUrls.contains(article.link()))
+                        .filter(article -> !seenUrls.contains(normalizeUrl(article.link())))
                         .toList();
 
                 // 모든 아티클이 중복이면 마지막 페이지로 판단하고 종료
@@ -64,8 +66,8 @@ public abstract class AbstractBlogCrawler implements BlogCrawler {
                     break;
                 }
 
-                // 수집한 URL 기록
-                newArticles.forEach(article -> seenUrls.add(article.link()));
+                // 수집한 URL 기록 (정규화된 URL로)
+                newArticles.forEach(article -> seenUrls.add(normalizeUrl(article.link())));
                 allArticles.addAll(newArticles);
                 pageCount = page;
 
@@ -102,5 +104,17 @@ public abstract class AbstractBlogCrawler implements BlogCrawler {
                 .userAgent(USER_AGENT)
                 .timeout(DEFAULT_TIMEOUT_MS)
                 .get();
+    }
+
+    /**
+     * URL 정규화 (디코딩하여 일관된 형식 유지)
+     */
+    protected String normalizeUrl(String url) {
+        if (url == null) return null;
+        try {
+            return URLDecoder.decode(url, StandardCharsets.UTF_8);
+        } catch (Exception e) {
+            return url;
+        }
     }
 }

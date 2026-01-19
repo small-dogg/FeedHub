@@ -76,9 +76,9 @@ public class VelogCrawler extends AbstractBlogCrawler {
                     break;
                 }
 
-                // 새로운 아티클만 필터링 (이미 수집한 URL 제외)
+                // 새로운 아티클만 필터링 (이미 수집한 URL 제외, 정규화된 URL로 비교)
                 List<CrawledArticle> newArticles = articles.stream()
-                        .filter(article -> !seenUrls.contains(article.link()))
+                        .filter(article -> !seenUrls.contains(normalizeUrl(article.link())))
                         .toList();
 
                 // 모든 아티클이 중복이면 마지막 페이지로 판단하고 종료
@@ -87,8 +87,8 @@ public class VelogCrawler extends AbstractBlogCrawler {
                     break;
                 }
 
-                // 수집한 URL 기록
-                newArticles.forEach(article -> seenUrls.add(article.link()));
+                // 수집한 URL 기록 (정규화된 URL로)
+                newArticles.forEach(article -> seenUrls.add(normalizeUrl(article.link())));
                 allArticles.addAll(newArticles);
                 pageCount++;
 

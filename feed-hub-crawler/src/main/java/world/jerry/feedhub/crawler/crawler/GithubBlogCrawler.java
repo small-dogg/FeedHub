@@ -63,10 +63,11 @@ public class GithubBlogCrawler extends AbstractBlogCrawler {
             // 1. sitemap.xml 시도
             List<CrawledArticle> sitemapArticles = crawlFromSitemap(baseUrl, request);
             if (!sitemapArticles.isEmpty()) {
-                // 중복 제거
+                // 중복 제거 (정규화된 URL로 비교)
                 for (CrawledArticle article : sitemapArticles) {
-                    if (!seenUrls.contains(article.link())) {
-                        seenUrls.add(article.link());
+                    String normalizedLink = normalizeUrl(article.link());
+                    if (!seenUrls.contains(normalizedLink)) {
+                        seenUrls.add(normalizedLink);
                         allArticles.add(article);
                     }
                 }
@@ -74,10 +75,11 @@ public class GithubBlogCrawler extends AbstractBlogCrawler {
             } else {
                 // 2. 메인 페이지 크롤링
                 List<CrawledArticle> htmlArticles = crawlFromHtml(baseUrl, request);
-                // 중복 제거
+                // 중복 제거 (정규화된 URL로 비교)
                 for (CrawledArticle article : htmlArticles) {
-                    if (!seenUrls.contains(article.link())) {
-                        seenUrls.add(article.link());
+                    String normalizedLink = normalizeUrl(article.link());
+                    if (!seenUrls.contains(normalizedLink)) {
+                        seenUrls.add(normalizedLink);
                         allArticles.add(article);
                     }
                 }
