@@ -9,6 +9,9 @@ interface FeedCardProps {
   onAddTag?: (feedId: number) => void;
   onTagClick?: (tagId: number) => void;
   onMarkAsRead?: (feedId: number) => void;
+  onLikeToggle?: (feedId: number, liked: boolean, likeCount: number) => void;
+  onLoginRequired?: () => void;
+  isLoggedIn?: boolean;
 }
 
 function formatDate(dateString: string | null): string {
@@ -23,8 +26,9 @@ function formatDate(dateString: string | null): string {
   });
 }
 
-export function FeedCard({ feed, onAddTag, onTagClick, onMarkAsRead }: FeedCardProps) {
+export function FeedCard({ feed, onAddTag, onTagClick, onMarkAsRead, onLikeToggle, onLoginRequired, isLoggedIn }: FeedCardProps) {
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [isLiking, setIsLiking] = useState(false);
   // 이번 세션에서 API를 호출했는지 추적 (중복 호출 방지)
   const hasCalledApiRef = useRef(false);
 
@@ -50,8 +54,28 @@ export function FeedCard({ feed, onAddTag, onTagClick, onMarkAsRead }: FeedCardP
   const handleViewClick = () => {
     markAsReadOnce();
   };
+
+  const handleLikeClick = async () => {
+    if (!isLoggedIn) {
+      onLoginRequired?.();
+      return;
+    }
+    if (isLiking) return;
+
+    setIsLiking(true);
+    try {
+      const result = await feedApi.toggleLike(feed.id);
+      onLikeToggle?.(feed.id, result.liked, result.likeCount);
+    } catch (error) {
+      console.error('좋아요 실패:', error);
+    } finally {
+      setIsLiking(false);
+    }
+  };
+
   return (
-    <div className="feed-card">
+    <div className="feed-card-wrapper">
+      <div className="feed-card">
       <div className="feed-card-header">
         {feed.rssSource.siteUrl ? (
           <a
@@ -125,13 +149,36 @@ export function FeedCard({ feed, onAddTag, onTagClick, onMarkAsRead }: FeedCardP
         </div>
       </div>
 
-      <ContentPreviewModal
-        isOpen={isPreviewOpen}
-        title={feed.title}
-        content={feed.description}
-        link={feed.link}
-        onClose={() => setIsPreviewOpen(false)}
-      />
+        <ContentPreviewModal
+          isOpen={isPreviewOpen}
+          title={feed.title}
+          content={feed.description}
+          link={feed.link}
+          onClose={() => setIsPreviewOpen(false)}
+        />
+      </div>
+      <div className="feed-like-section">
+        <button
+          type="button"
+          className={`btn-like ${feed.isLiked ? 'liked' : ''}`}
+          onClick={handleLikeClick}
+          disabled={isLiking}
+          aria-label={feed.isLiked ? '좋아요 취소' : '좋아요'}
+        >
+          <svg
+            className="heart-icon"
+            viewBox="0 0 24 24"
+            fill={feed.isLiked ? 'currentColor' : 'none'}
+            stroke="currentColor"
+            strokeWidth="2"
+          >
+            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+          </svg>
+        </button>
+        {feed.likeCount > 0 && (
+          <span className="like-count">{feed.likeCount}</span>
+        )}
+      </div>
     </div>
   );
 }

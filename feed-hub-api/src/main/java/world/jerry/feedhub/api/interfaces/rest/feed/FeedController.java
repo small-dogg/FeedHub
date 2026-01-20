@@ -12,6 +12,7 @@ import world.jerry.feedhub.api.application.feed.dto.FeedEntryPage;
 import world.jerry.feedhub.api.application.feed.dto.FeedSearchCriteria;
 import world.jerry.feedhub.api.interfaces.rest.feed.dto.FeedEntryResponse;
 import world.jerry.feedhub.api.interfaces.rest.feed.dto.FeedPageResponse;
+import world.jerry.feedhub.api.interfaces.rest.feed.dto.LikeResponse;
 import world.jerry.feedhub.api.interfaces.rest.feed.dto.UpdateFeedTagsRequest;
 
 import java.time.Instant;
@@ -65,5 +66,24 @@ public class FeedController {
     ) {
         feedEntryService.markAsRead(id, memberId);
         return ResponseEntity.ok().build();
+    }
+
+    /**
+     * 피드 좋아요 토글
+     * 로그인 필수
+     */
+    @PostMapping("/{id}/like")
+    public ResponseEntity<LikeResponse> toggleLike(
+            @AuthenticationPrincipal Long memberId,
+            @PathVariable Long id
+    ) {
+        if (memberId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        boolean liked = feedEntryService.toggleLike(id, memberId);
+        long likeCount = feedEntryService.getLikeCount(id);
+
+        return ResponseEntity.ok(new LikeResponse(id, liked, likeCount));
     }
 }

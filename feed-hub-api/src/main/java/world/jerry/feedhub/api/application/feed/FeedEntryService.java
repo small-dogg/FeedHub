@@ -8,6 +8,8 @@ import world.jerry.feedhub.api.application.feed.dto.FeedEntryInfo;
 import world.jerry.feedhub.api.application.feed.dto.UpdateFeedTagsCommand;
 import world.jerry.feedhub.api.domain.feed.FeedEntry;
 import world.jerry.feedhub.api.domain.feed.FeedEntryRepository;
+import world.jerry.feedhub.api.domain.feed.FeedLike;
+import world.jerry.feedhub.api.domain.feed.FeedLikeRepository;
 import world.jerry.feedhub.api.domain.feed.MemberFeedRead;
 import world.jerry.feedhub.api.domain.feed.MemberFeedReadRepository;
 import world.jerry.feedhub.api.domain.rss.RssInfo;
@@ -31,6 +33,7 @@ public class FeedEntryService {
 
     private final FeedEntryRepository feedEntryRepository;
     private final MemberFeedReadRepository memberFeedReadRepository;
+    private final FeedLikeRepository feedLikeRepository;
     private final RssInfoRepository rssInfoRepository;
     private final TagRepository tagRepository;
 
@@ -115,5 +118,50 @@ public class FeedEntryService {
 
         log.debug("피드 읽음 처리 완료 - memberId: {}, feedEntryId: {}", memberId, feedEntryId);
         return true;
+    }
+
+    /**
+     * 피드 좋아요 토글
+     * @return true if liked, false if unliked
+     */
+    @Transactional
+    public boolean toggleLike(Long feedEntryId, Long memberId) {
+        if (memberId == null) {
+            throw new IllegalArgumentException("로그인이 필요합니다.");
+        }
+
+        // 피드 존재 확인
+        if (!feedEntryRepository.existsById(feedEntryId)) {
+            throw new NoSuchElementException("피드를 찾을 수 없습니다: " + feedEntryId);
+        }
+
+        // 이미 좋아요한 경우 취소
+        if (feedLikeRepository.existsByMemberIdAndFeedEntryId(memberId, feedEntryId)) {
+            feedLikeRepository.deleteByMemberIdAndFeedEntryId(memberId, feedEntryId);
+            log.debug("피드 좋아요 취소 - memberId: {}, feedEntryId: {}", memberId, feedEntryId);
+            return false;
+        }
+
+        // 좋아요 추가
+        feedLikeRepository.save(new FeedLike(memberId, feedEntryId));
+        log.debug("피드 좋아요 추가 - memberId: {}, feedEntryId: {}", memberId, feedEntryId);
+        return true;
+    }
+
+    /**
+     * 피드 좋아요 수 조회
+     */
+    public long getLikeCount(Long feedEntryId) {
+        return feedLikeRepository.countByFeedEntryId(feedEntryId);
+    }
+
+    /**
+     * 특정 회원이 피드를 좋아요했는지 확인
+     */
+    public boolean isLikedByMember(Long feedEntryId, Long memberId) {
+        if (memberId == null) {
+            return false;
+        }
+        return feedLikeRepository.existsByMemberIdAndFeedEntryId(memberId, feedEntryId);
     }
 }

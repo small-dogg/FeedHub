@@ -35,6 +35,14 @@ export interface FeedEntry {
   viewCount: number;
   tags: { id: number; name: string }[];
   isRead: boolean;
+  likeCount: number;
+  isLiked: boolean;
+}
+
+export interface LikeResponse {
+  feedEntryId: number;
+  liked: boolean;
+  likeCount: number;
 }
 
 export interface FeedSlice {

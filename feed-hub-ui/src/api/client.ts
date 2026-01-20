@@ -3,6 +3,7 @@ import type {
   FeedEntry,
   FeedSlice,
   FeedSearchParams,
+  LikeResponse,
   OpmlImportResult,
   RssSource,
   SyncResult,
@@ -73,6 +74,11 @@ export const feedApi = {
 
   incrementViewCount: async (feedId: number): Promise<void> => {
     await api.post(`/feeds/${feedId}/view`);
+  },
+
+  toggleLike: async (feedId: number): Promise<LikeResponse> => {
+    const response = await api.post<LikeResponse>(`/feeds/${feedId}/like`);
+    return response.data;
   },
 };
 

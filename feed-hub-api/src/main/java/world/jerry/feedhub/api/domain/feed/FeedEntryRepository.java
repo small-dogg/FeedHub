@@ -10,6 +10,8 @@ public interface FeedEntryRepository {
 
     boolean existsByRssInfoIdAndGuid(Long rssInfoId, String guid);
 
+    boolean existsById(Long id);
+
     /**
      * 조회수를 원자적으로 1 증가시킴 (동시성 안전)
      * @return 업데이트된 행 수

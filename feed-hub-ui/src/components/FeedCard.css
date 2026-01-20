@@ -1,14 +1,71 @@
+.feed-card-wrapper {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
 .feed-card {
+  flex: 1;
   background: #ffffff;
   border: 1px solid #e0e0e0;
   border-radius: 8px;
   padding: 16px;
-  margin-bottom: 12px;
   transition: box-shadow 0.2s ease;
 }
 
 .feed-card:hover {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.feed-like-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 48px;
+  padding: 8px 0;
+}
+
+.btn-like {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 50%;
+  background: #f5f5f5;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: #999;
+}
+
+.btn-like:hover {
+  background: #ffebee;
+  color: #e91e63;
+  transform: scale(1.1);
+}
+
+.btn-like.liked {
+  background: #ffebee;
+  color: #e91e63;
+}
+
+.btn-like:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.heart-icon {
+  width: 22px;
+  height: 22px;
+}
+
+.like-count {
+  margin-top: 4px;
+  font-size: 0.8rem;
+  color: #666;
+  font-weight: 500;
 }
 
 .feed-card-header {

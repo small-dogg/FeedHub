@@ -8,9 +8,12 @@ interface FeedListProps {
   onAddTag?: (feedId: number) => void;
   onTagClick?: (tagId: number) => void;
   onMarkAsRead?: (feedId: number) => void;
+  onLikeToggle?: (feedId: number, liked: boolean, likeCount: number) => void;
+  onLoginRequired?: () => void;
+  isLoggedIn?: boolean;
 }
 
-export function FeedList({ feeds, loading, onAddTag, onTagClick, onMarkAsRead }: FeedListProps) {
+export function FeedList({ feeds, loading, onAddTag, onTagClick, onMarkAsRead, onLikeToggle, onLoginRequired, isLoggedIn }: FeedListProps) {
   if (loading) {
     return (
       <div className="feed-list-loading">
@@ -37,6 +40,9 @@ export function FeedList({ feeds, loading, onAddTag, onTagClick, onMarkAsRead }:
           onAddTag={onAddTag}
           onTagClick={onTagClick}
           onMarkAsRead={onMarkAsRead}
+          onLikeToggle={onLikeToggle}
+          onLoginRequired={onLoginRequired}
+          isLoggedIn={isLoggedIn}
         />
       ))}
     </div>

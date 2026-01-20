@@ -157,6 +157,17 @@ function App() {
     );
   };
 
+  const handleLikeToggle = (feedId: number, liked: boolean, likeCount: number) => {
+    // 좋아요 상태 로컬 업데이트
+    setFeeds((prev) =>
+      prev.map((feed) =>
+        feed.id === feedId
+          ? { ...feed, isLiked: liked, likeCount }
+          : feed
+      )
+    );
+  };
+
   const handleAuthSuccess = (userData: User, token: string) => {
     tokenManager.setToken(token);
     setUser(userData);
@@ -218,6 +229,9 @@ function App() {
           onAddTag={handleAddTag}
           onTagClick={handleTagClick}
           onMarkAsRead={handleMarkAsRead}
+          onLikeToggle={handleLikeToggle}
+          onLoginRequired={() => setIsAuthModalOpen(true)}
+          isLoggedIn={user !== null}
         />
 
         {/* Load more button */}

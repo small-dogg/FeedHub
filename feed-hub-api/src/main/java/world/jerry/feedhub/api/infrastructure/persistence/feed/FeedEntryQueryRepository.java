@@ -10,6 +10,7 @@ import world.jerry.feedhub.api.application.feed.dto.FeedEntryInfo;
 import world.jerry.feedhub.api.application.feed.dto.FeedEntryPage;
 import world.jerry.feedhub.api.application.feed.dto.FeedSearchCriteria;
 import world.jerry.feedhub.api.domain.feed.FeedEntry;
+import world.jerry.feedhub.api.domain.feed.FeedLikeRepository;
 import world.jerry.feedhub.api.domain.feed.MemberFeedReadRepository;
 import world.jerry.feedhub.api.domain.feed.QFeedEntry;
 import world.jerry.feedhub.api.domain.rss.QRssInfo;
@@ -32,6 +33,7 @@ public class FeedEntryQueryRepository {
 
     private final JPAQueryFactory queryFactory;
     private final MemberFeedReadRepository memberFeedReadRepository;
+    private final FeedLikeRepository feedLikeRepository;
 
     public FeedEntryPage searchFeeds(FeedSearchCriteria criteria) {
         QFeedEntry feed = feedEntry;
@@ -108,6 +110,12 @@ public class FeedEntryQueryRepository {
         // Fetch read status for all feed entries (filtered by member if logged in)
         Set<Long> readFeedEntryIds = fetchReadFeedEntryIds(feedEntryIds, criteria.memberId());
 
+        // Fetch like counts for all feed entries
+        Map<Long, Long> likeCounts = fetchLikeCounts(feedEntryIds);
+
+        // Fetch liked status for current member
+        Set<Long> likedFeedEntryIds = fetchLikedFeedEntryIds(feedEntryIds, criteria.memberId());
+
         List<FeedEntryInfo> content = results.stream()
                 .map(tuple -> {
                     FeedEntry entry = tuple.get(feed);
@@ -115,7 +123,9 @@ public class FeedEntryQueryRepository {
                     String siteUrl = tuple.get(rss.siteUrl);
                     Set<Tag> tags = tagsByFeedEntryId.getOrDefault(entry.getId(), Set.of());
                     boolean isRead = readFeedEntryIds.contains(entry.getId());
-                    return FeedEntryInfo.from(entry, blogName, siteUrl, tags, isRead);
+                    long likeCount = likeCounts.getOrDefault(entry.getId(), 0L);
+                    boolean isLiked = likedFeedEntryIds.contains(entry.getId());
+                    return FeedEntryInfo.from(entry, blogName, siteUrl, tags, isRead, likeCount, isLiked);
                 })
                 .toList();
 
@@ -167,5 +177,25 @@ public class FeedEntryQueryRepository {
         }
 
         return result;
+    }
+
+    private Map<Long, Long> fetchLikeCounts(Set<Long> feedEntryIds) {
+        if (feedEntryIds.isEmpty()) {
+            return Map.of();
+        }
+
+        Set<Object[]> results = feedLikeRepository.countByFeedEntryIdIn(feedEntryIds);
+        return results.stream()
+                .collect(Collectors.toMap(
+                        row -> (Long) row[0],
+                        row -> (Long) row[1]
+                ));
+    }
+
+    private Set<Long> fetchLikedFeedEntryIds(Set<Long> feedEntryIds, Long memberId) {
+        if (feedEntryIds.isEmpty() || memberId == null) {
+            return Set.of();
+        }
+        return feedLikeRepository.findLikedFeedEntryIdsByMemberIdAndFeedEntryIdIn(memberId, feedEntryIds);
     }
 }
