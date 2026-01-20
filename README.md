@@ -5,10 +5,11 @@ RSS 피드를 한눈에 관리하고 조회할 수 있는 웹 애플리케이션
 ## Preview
 
 
-https://github.com/user-attachments/assets/ac8e3fcf-c03b-4857-b7c1-7fb64b2f8a21
+https://github.com/user-attachments/assets/a14614f1-ec28-42b9-a8ef-84e338691ddb
 
 
-> 동영상이 표시되지 않으면 [PREVIEW.mp4](./PREVIEW.mp4) 파일을 직접 다운로드하여 확인하세요.
+
+
 
 ## 프로젝트 구조
 
