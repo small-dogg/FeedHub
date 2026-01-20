@@ -22,8 +22,13 @@ import java.util.Set;
 @Slf4j
 public abstract class AbstractBlogCrawler implements BlogCrawler {
 
-    protected static final int DEFAULT_TIMEOUT_MS = 10000;
-    protected static final String USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36";
+    protected static final int DEFAULT_TIMEOUT_MS = 15000;
+    protected static final int MAX_RETRIES = 3;
+    protected static final long RETRY_DELAY_MS = 2000;
+
+    // 실제 브라우저와 유사한 User-Agent
+    protected static final String USER_AGENT =
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
 
     private final int maxPagesPerCrawl;
 
@@ -98,12 +103,75 @@ public abstract class AbstractBlogCrawler implements BlogCrawler {
 
     /**
      * Jsoup을 사용하여 HTML Document 가져오기
+     * - 브라우저와 유사한 헤더 설정으로 봇 차단 우회
+     * - 재시도 로직 포함
      */
     protected Document fetchDocument(String url) throws IOException {
-        return Jsoup.connect(url)
-                .userAgent(USER_AGENT)
-                .timeout(DEFAULT_TIMEOUT_MS)
-                .get();
+        IOException lastException = null;
+
+        for (int attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+            try {
+                Document doc = Jsoup.connect(url)
+                        .userAgent(USER_AGENT)
+                        .header("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8")
+                        .header("Accept-Language", "ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7")
+                        .header("Accept-Encoding", "gzip, deflate, br")
+                        .header("Cache-Control", "no-cache")
+                        .header("Pragma", "no-cache")
+                        .header("Sec-Ch-Ua", "\"Not_A Brand\";v=\"8\", \"Chromium\";v=\"120\", \"Google Chrome\";v=\"120\"")
+                        .header("Sec-Ch-Ua-Mobile", "?0")
+                        .header("Sec-Ch-Ua-Platform", "\"macOS\"")
+                        .header("Sec-Fetch-Dest", "document")
+                        .header("Sec-Fetch-Mode", "navigate")
+                        .header("Sec-Fetch-Site", "none")
+                        .header("Sec-Fetch-User", "?1")
+                        .header("Upgrade-Insecure-Requests", "1")
+                        .referrer("https://www.google.com/")
+                        .timeout(DEFAULT_TIMEOUT_MS)
+                        .followRedirects(true)
+                        .ignoreHttpErrors(false)
+                        .get();
+
+                log.debug("Successfully fetched document from: {}", url);
+                return doc;
+
+            } catch (org.jsoup.HttpStatusException e) {
+                lastException = e;
+                int statusCode = e.getStatusCode();
+
+                if (statusCode == 403 || statusCode == 429) {
+                    log.warn("HTTP {} on attempt {}/{} for URL: {}", statusCode, attempt, MAX_RETRIES, url);
+
+                    if (attempt < MAX_RETRIES) {
+                        long delay = RETRY_DELAY_MS * attempt; // Exponential backoff
+                        log.debug("Retrying after {}ms...", delay);
+                        try {
+                            Thread.sleep(delay);
+                        } catch (InterruptedException ie) {
+                            Thread.currentThread().interrupt();
+                            throw new IOException("Interrupted during retry", ie);
+                        }
+                    }
+                } else {
+                    // 다른 HTTP 에러는 즉시 실패
+                    throw e;
+                }
+            } catch (IOException e) {
+                lastException = e;
+                log.warn("IO error on attempt {}/{} for URL: {} - {}", attempt, MAX_RETRIES, url, e.getMessage());
+
+                if (attempt < MAX_RETRIES) {
+                    try {
+                        Thread.sleep(RETRY_DELAY_MS * attempt);
+                    } catch (InterruptedException ie) {
+                        Thread.currentThread().interrupt();
+                        throw new IOException("Interrupted during retry", ie);
+                    }
+                }
+            }
+        }
+
+        throw lastException != null ? lastException : new IOException("Failed to fetch document after " + MAX_RETRIES + " attempts");
     }
 
     /**

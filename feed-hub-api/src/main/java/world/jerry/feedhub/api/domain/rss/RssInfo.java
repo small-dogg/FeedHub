@@ -29,6 +29,9 @@ public class RssInfo {
     @Column(name = "site_url", length = 2048)
     private String siteUrl;
 
+    @Column(name = "crawl_url", length = 2048)
+    private String crawlUrl;
+
     @Column(name = "language", length = 10)
     private String language;
 
@@ -42,11 +45,12 @@ public class RssInfo {
     @Column(name = "last_sync_at")
     private Instant lastSyncAt;
 
-    public RssInfo(String blogName, String author, String rssUrl, String siteUrl, String language, BlogType blogType) {
+    public RssInfo(String blogName, String author, String rssUrl, String siteUrl, String crawlUrl, String language, BlogType blogType) {
         this.blogName = blogName;
         this.author = author;
         this.rssUrl = rssUrl;
         this.siteUrl = siteUrl;
+        this.crawlUrl = crawlUrl;
         this.language = language;
         this.blogType = blogType != null ? blogType : BlogType.UNKNOWN;
         this.createdAt = Instant.now();
@@ -60,12 +64,13 @@ public class RssInfo {
         this.blogType = blogType;
     }
 
-    public void update(String blogName, String author, String siteUrl, String language, BlogType blogType) {
+    public void update(String blogName, String author, String siteUrl, String crawlUrl, String language, BlogType blogType) {
         if (blogName != null && !blogName.isBlank()) {
             this.blogName = blogName;
         }
         this.author = author;
         this.siteUrl = siteUrl;
+        this.crawlUrl = crawlUrl;
         this.language = language;
         if (blogType != null) {
             this.blogType = blogType;

@@ -48,8 +48,9 @@ public class OpmlImportService {
                                 null,
                                 entry.xmlUrl(),
                                 entry.htmlUrl(),
-                                null,
-                                null  // blogType 자동 감지
+                                null,  // crawlUrl
+                                null,  // language
+                                null   // blogType 자동 감지
                         )
                 );
                 imported++;

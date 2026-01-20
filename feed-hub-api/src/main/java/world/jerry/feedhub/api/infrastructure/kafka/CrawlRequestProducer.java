@@ -51,6 +51,7 @@ public class CrawlRequestProducer {
                 rssInfo.getBlogName(),
                 blogType,
                 rssInfo.getSiteUrl(),
+                rssInfo.getCrawlUrl(),
                 rssInfo.getRssUrl(),
                 crawlMode
         );

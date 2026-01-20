@@ -13,6 +13,7 @@ public record CrawlRequestMessage(
         String blogName,
         BlogType blogType,
         String siteUrl,
+        String crawlUrl,
         String rssUrl,
         CrawlMode crawlMode,
         Instant requestedAt
@@ -22,6 +23,7 @@ public record CrawlRequestMessage(
             String blogName,
             BlogType blogType,
             String siteUrl,
+            String crawlUrl,
             String rssUrl,
             CrawlMode crawlMode
     ) {
@@ -30,6 +32,7 @@ public record CrawlRequestMessage(
                 blogName,
                 blogType,
                 siteUrl,
+                crawlUrl,
                 rssUrl,
                 crawlMode,
                 Instant.now()

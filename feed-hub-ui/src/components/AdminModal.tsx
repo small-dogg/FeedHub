@@ -34,6 +34,7 @@ export function AdminModal({ isOpen, onClose }: AdminModalProps) {
     blogName: '',
     author: '',
     siteUrl: '',
+    crawlUrl: '',
     language: '',
     blogType: '' as BlogType | '',
   });
@@ -101,6 +102,7 @@ export function AdminModal({ isOpen, onClose }: AdminModalProps) {
       blogName: source.blogName,
       author: source.author || '',
       siteUrl: source.siteUrl || '',
+      crawlUrl: source.crawlUrl || '',
       language: source.language || '',
       blogType: source.blogType || '',
     });
@@ -114,6 +116,7 @@ export function AdminModal({ isOpen, onClose }: AdminModalProps) {
         blogName: editForm.blogName || undefined,
         author: editForm.author || undefined,
         siteUrl: editForm.siteUrl || undefined,
+        crawlUrl: editForm.crawlUrl || undefined,
         language: editForm.language || undefined,
         blogType: editForm.blogType || undefined,
       });
@@ -388,6 +391,15 @@ export function AdminModal({ isOpen, onClose }: AdminModalProps) {
                                 type="url"
                                 value={editForm.siteUrl}
                                 onChange={(e) => setEditForm({ ...editForm, siteUrl: e.target.value })}
+                              />
+                            </div>
+                            <div className="edit-form-row">
+                              <label>크롤링 URL</label>
+                              <input
+                                type="url"
+                                value={editForm.crawlUrl}
+                                onChange={(e) => setEditForm({ ...editForm, crawlUrl: e.target.value })}
+                                placeholder="예: https://medium.com/watcha/all"
                               />
                             </div>
                             <div className="edit-form-row">

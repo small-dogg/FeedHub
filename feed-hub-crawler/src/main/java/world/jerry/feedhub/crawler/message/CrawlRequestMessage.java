@@ -10,6 +10,7 @@ public record CrawlRequestMessage(
         String blogName,
         BlogType blogType,
         String siteUrl,
+        String crawlUrl,
         String rssUrl,
         CrawlMode crawlMode,
         Instant requestedAt

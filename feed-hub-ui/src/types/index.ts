@@ -12,6 +12,7 @@ export interface RssSource {
   author: string | null;
   rssUrl: string;
   siteUrl: string | null;
+  crawlUrl: string | null;
   language: string | null;
   blogType: BlogType | null;
   createdAt: string;

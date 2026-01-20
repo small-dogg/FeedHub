@@ -61,6 +61,7 @@ public class RssInfoService {
                 author,
                 command.rssUrl(),
                 siteUrl,
+                command.crawlUrl(),
                 language,
                 blogType
         );
@@ -110,11 +111,11 @@ public class RssInfoService {
      * RSS 소스 정보 수정
      */
     @Transactional
-    public RssInfoDetail updateRssInfo(Long id, String blogName, String author, String siteUrl, String language, BlogType blogType) {
+    public RssInfoDetail updateRssInfo(Long id, String blogName, String author, String siteUrl, String crawlUrl, String language, BlogType blogType) {
         RssInfo rssInfo = rssInfoRepository.findById(id)
                 .orElseThrow(() -> new NoSuchElementException("RSS source not found with id: " + id));
 
-        rssInfo.update(blogName, author, siteUrl, language, blogType);
+        rssInfo.update(blogName, author, siteUrl, crawlUrl, language, blogType);
         return RssInfoDetail.from(rssInfo);
     }
 

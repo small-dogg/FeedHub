@@ -106,6 +106,7 @@ public class RssSourceController {
                 request.blogName(),
                 request.author(),
                 request.siteUrl(),
+                request.crawlUrl(),
                 request.language(),
                 request.blogType()
         );

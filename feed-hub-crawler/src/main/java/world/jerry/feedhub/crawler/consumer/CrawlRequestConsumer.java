@@ -48,6 +48,7 @@ public class CrawlRequestConsumer {
     private void processMessage(ConsumerRecord<String, CrawlRequestMessage> record, Acknowledgment ack) {
         CrawlRequestMessage message = record.value();
 
+
         log.info("Received crawl request: rssInfoId={}, blogType={}, topic={}",
                 message.rssInfoId(), message.blogType(), record.topic());
 

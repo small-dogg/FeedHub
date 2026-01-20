@@ -92,6 +92,7 @@ export const rssSourceApi = {
     blogName?: string;
     author?: string;
     siteUrl?: string;
+    crawlUrl?: string;
     language?: string;
     blogType?: string;
   }): Promise<RssSource> => {
