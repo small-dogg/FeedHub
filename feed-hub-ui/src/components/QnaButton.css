@@ -1,0 +1,47 @@
+.qna-button {
+  position: fixed;
+  bottom: 92px;
+  right: 24px;
+  width: 56px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #ff9800;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  box-shadow: 0 4px 12px rgba(255, 152, 0, 0.4);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  z-index: 100;
+}
+
+.qna-button:hover {
+  background: #f57c00;
+  transform: scale(1.05);
+  box-shadow: 0 6px 16px rgba(255, 152, 0, 0.5);
+}
+
+.qna-button:active {
+  transform: scale(0.95);
+}
+
+.qna-button svg {
+  width: 24px;
+  height: 24px;
+}
+
+@media (max-width: 600px) {
+  .qna-button {
+    bottom: 76px;
+    right: 16px;
+    width: 48px;
+    height: 48px;
+  }
+
+  .qna-button svg {
+    width: 20px;
+    height: 20px;
+  }
+}

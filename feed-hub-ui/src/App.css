@@ -16,6 +16,15 @@
   text-align: left;
 }
 
+.header-logo {
+  text-decoration: none;
+  color: inherit;
+}
+
+.header-logo:hover {
+  opacity: 0.9;
+}
+
 .app-header h1 {
   margin: 0 0 4px 0;
   font-size: 1.8rem;

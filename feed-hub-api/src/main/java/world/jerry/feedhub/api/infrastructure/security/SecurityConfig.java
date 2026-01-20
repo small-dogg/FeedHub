@@ -34,6 +34,7 @@ public class SecurityConfig {
                         // Protected endpoints require authentication
                         .requestMatchers("/api/v1/tags/**").authenticated()
                         .requestMatchers(HttpMethod.PUT, "/api/v1/feeds/*/tags").authenticated()
+                        .requestMatchers("/api/v1/qna/**").authenticated()
                         // All other requests
                         .anyRequest().permitAll()
                 )

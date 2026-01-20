@@ -13,6 +13,11 @@ import type {
   SignUpRequest,
   SignInRequest,
   User,
+  Qna,
+  QnaDetail,
+  QnaAnswer,
+  CreateQnaRequest,
+  CreateAnswerRequest,
 } from '../types';
 
 const API_BASE = '/api/v1';
@@ -215,6 +220,38 @@ export const authApi = {
 
   getMe: async (): Promise<User> => {
     const response = await api.get<User>('/auth/me');
+    return response.data;
+  },
+};
+
+// QnA API
+export const qnaApi = {
+  create: async (data: CreateQnaRequest): Promise<Qna> => {
+    const response = await api.post<Qna>('/qna', data);
+    return response.data;
+  },
+
+  getMyList: async (): Promise<Qna[]> => {
+    const response = await api.get<Qna[]>('/qna');
+    return response.data;
+  },
+
+  getAllList: async (): Promise<Qna[]> => {
+    const response = await api.get<Qna[]>('/qna/all');
+    return response.data;
+  },
+
+  getDetail: async (id: number): Promise<QnaDetail> => {
+    const response = await api.get<QnaDetail>(`/qna/${id}`);
+    return response.data;
+  },
+
+  delete: async (id: number): Promise<void> => {
+    await api.delete(`/qna/${id}`);
+  },
+
+  createAnswer: async (qnaId: number, data: CreateAnswerRequest): Promise<QnaAnswer> => {
+    const response = await api.post<QnaAnswer>(`/qna/${qnaId}/answer`, data);
     return response.data;
   },
 };

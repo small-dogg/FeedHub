@@ -111,3 +111,42 @@ export interface SignInRequest {
   email: string;
   password: string;
 }
+
+// QnA types
+export type QnaType = 'GENERAL' | 'FEATURE_REQUEST' | 'BUG_REPORT' | 'RSS_REQUEST';
+export type QnaStatus = 'PENDING' | 'ANSWERED' | 'CLOSED';
+
+export interface Qna {
+  id: number;
+  memberNickname: string;
+  type: QnaType;
+  title: string;
+  isSecret: boolean;
+  status: QnaStatus;
+  createdAt: string;
+  answerCount: number;
+}
+
+export interface QnaAnswer {
+  id: number;
+  memberNickname: string;
+  content: string;
+  createdAt: string;
+}
+
+export interface QnaDetail extends Qna {
+  content: string;
+  updatedAt: string | null;
+  answers: QnaAnswer[];
+}
+
+export interface CreateQnaRequest {
+  type: QnaType;
+  title: string;
+  content: string;
+  isSecret: boolean;
+}
+
+export interface CreateAnswerRequest {
+  content: string;
+}
