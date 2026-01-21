@@ -77,7 +77,11 @@ public class FeedEntryService {
         String blogName = rssInfo != null ? rssInfo.getBlogName() : null;
         String siteUrl = rssInfo != null ? rssInfo.getSiteUrl() : null;
 
-        return FeedEntryInfo.from(feedEntry, blogName, siteUrl, feedEntry.getTags());
+        // 좋아요 정보 조회
+        long likeCount = feedLikeRepository.countByFeedEntryId(feedEntryId);
+        boolean isLiked = feedLikeRepository.existsByMemberIdAndFeedEntryId(memberId, feedEntryId);
+
+        return FeedEntryInfo.from(feedEntry, blogName, siteUrl, feedEntry.getTags(), false, likeCount, isLiked);
     }
 
     /**
