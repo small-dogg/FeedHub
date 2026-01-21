@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import type { Tag, FeedEntry } from '../types';
+import type { Tag, TagSuggestion, FeedEntry } from '../types';
 import { tagApi, feedApi } from '../api/client';
 import './TagSelectModal.css';
 
@@ -19,6 +19,7 @@ export function TagSelectModal({
   onUpdate,
 }: TagSelectModalProps) {
   const [allTags, setAllTags] = useState<Tag[]>([]);
+  const [suggestions, setSuggestions] = useState<TagSuggestion[]>([]);
   const [selectedTagIds, setSelectedTagIds] = useState<number[]>([]);
   const [newTagName, setNewTagName] = useState('');
   const [newTagNames, setNewTagNames] = useState<string[]>([]);
@@ -28,6 +29,7 @@ export function TagSelectModal({
   useEffect(() => {
     if (isOpen) {
       fetchTags();
+      fetchSuggestions();
       setSelectedTagIds(currentTags.map((t) => t.id));
       setNewTagName('');
       setNewTagNames([]);
@@ -43,6 +45,16 @@ export function TagSelectModal({
       console.error('태그 로드 실패:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchSuggestions = async () => {
+    if (!feedId) return;
+    try {
+      const data = await tagApi.getSuggestions(feedId, 10);
+      setSuggestions(data);
+    } catch (error) {
+      console.error('추천 태그 로드 실패:', error);
     }
   };
 
@@ -79,6 +91,32 @@ export function TagSelectModal({
   const handleRemoveNewTag = (tagName: string) => {
     setNewTagNames((prev) => prev.filter((name) => name !== tagName));
   };
+
+  const handleSuggestionClick = (tagName: string) => {
+    // 이미 newTagNames에 있으면 무시
+    if (newTagNames.includes(tagName)) return;
+    // 이미 존재하는 태그인지 확인
+    const existingTag = allTags.find(
+      (t) => t.name.toLowerCase() === tagName.toLowerCase()
+    );
+    if (existingTag) {
+      if (!selectedTagIds.includes(existingTag.id)) {
+        setSelectedTagIds((prev) => [...prev, existingTag.id]);
+      }
+    } else {
+      setNewTagNames((prev) => [...prev, tagName]);
+    }
+  };
+
+  // 현재 선택되지 않은 추천 태그만 필터링
+  const filteredSuggestions = suggestions.filter((s) => {
+    const existingTag = allTags.find(
+      (t) => t.name.toLowerCase() === s.name.toLowerCase()
+    );
+    if (existingTag && selectedTagIds.includes(existingTag.id)) return false;
+    if (newTagNames.some((n) => n.toLowerCase() === s.name.toLowerCase())) return false;
+    return true;
+  });
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
@@ -151,6 +189,27 @@ export function TagSelectModal({
                   </button>
                 </span>
               ))}
+            </div>
+          )}
+
+          {/* 추천 태그 */}
+          {filteredSuggestions.length > 0 && (
+            <div className="tag-suggestions">
+              <div className="tag-suggestions-header">추천 태그</div>
+              <div className="tag-suggestions-list">
+                {filteredSuggestions.map((s) => (
+                  <button
+                    key={s.name}
+                    type="button"
+                    className="tag-suggestion-chip"
+                    onClick={() => handleSuggestionClick(s.name)}
+                    disabled={saving}
+                  >
+                    #{s.name}
+                    <span className="tag-suggestion-count">({s.userCount}명)</span>
+                  </button>
+                ))}
+              </div>
             </div>
           )}
 

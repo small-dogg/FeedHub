@@ -9,6 +9,7 @@ import type {
   SyncResult,
   CrawlResult,
   Tag,
+  TagSuggestion,
   AuthResponse,
   SignUpRequest,
   SignInRequest,
@@ -196,6 +197,11 @@ export const tagApi = {
 
   delete: async (id: number): Promise<void> => {
     await api.delete(`/tags/${id}`);
+  },
+
+  getSuggestions: async (feedEntryId: number, limit = 10): Promise<TagSuggestion[]> => {
+    const response = await api.get<TagSuggestion[]>(`/tags/suggestions?feedEntryId=${feedEntryId}&limit=${limit}`);
+    return response.data;
   },
 };
 

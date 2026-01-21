@@ -10,6 +10,7 @@ import world.jerry.feedhub.api.application.tag.TagService;
 import world.jerry.feedhub.api.application.tag.dto.TagInfo;
 import world.jerry.feedhub.api.interfaces.rest.tag.dto.CreateTagRequest;
 import world.jerry.feedhub.api.interfaces.rest.tag.dto.TagResponse;
+import world.jerry.feedhub.api.interfaces.rest.tag.dto.TagSuggestionResponse;
 
 import java.util.List;
 
@@ -40,6 +41,20 @@ public class TagController {
                 .map(TagResponse::from)
                 .toList();
         return ResponseEntity.ok(tags);
+    }
+
+    @GetMapping("/suggestions")
+    public ResponseEntity<List<TagSuggestionResponse>> getSuggestions(
+            @AuthenticationPrincipal Long memberId,
+            @RequestParam Long feedEntryId,
+            @RequestParam(defaultValue = "10") int limit) {
+        if (memberId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        List<TagSuggestionResponse> suggestions = tagService.getSuggestionsForFeed(feedEntryId, memberId, limit).stream()
+                .map(TagSuggestionResponse::from)
+                .toList();
+        return ResponseEntity.ok(suggestions);
     }
 
     @GetMapping("/{id}")

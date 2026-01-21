@@ -137,6 +137,57 @@
   opacity: 1;
 }
 
+/* 추천 태그 섹션 */
+.tag-suggestions {
+  margin-bottom: 16px;
+  padding: 12px;
+  background: #f3e5f5;
+  border-radius: 8px;
+}
+
+.tag-suggestions-header {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #7b1fa2;
+  margin-bottom: 10px;
+}
+
+.tag-suggestions-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.tag-suggestion-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  background: #fff;
+  border: 1px solid #ce93d8;
+  border-radius: 16px;
+  font-size: 0.85rem;
+  color: #7b1fa2;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.tag-suggestion-chip:hover:not(:disabled) {
+  background: #e1bee7;
+  border-color: #ab47bc;
+}
+
+.tag-suggestion-chip:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.tag-suggestion-count {
+  font-size: 0.75rem;
+  color: #9c27b0;
+  opacity: 0.8;
+}
+
 .tag-modal-loading,
 .tag-modal-empty {
   text-align: center;

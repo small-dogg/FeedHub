@@ -6,6 +6,11 @@ export interface Tag {
   createdAt: string;
 }
 
+export interface TagSuggestion {
+  name: string;
+  userCount: number;
+}
+
 export interface RssSource {
   id: number;
   blogName: string;

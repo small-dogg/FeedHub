@@ -5,8 +5,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import world.jerry.feedhub.api.application.tag.dto.CreateTagCommand;
 import world.jerry.feedhub.api.application.tag.dto.TagInfo;
+import world.jerry.feedhub.api.application.tag.dto.TagSuggestionInfo;
 import world.jerry.feedhub.api.domain.tag.Tag;
 import world.jerry.feedhub.api.domain.tag.TagRepository;
+import world.jerry.feedhub.api.infrastructure.persistence.tag.TagQueryRepository;
 
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -17,6 +19,7 @@ import java.util.NoSuchElementException;
 public class TagService {
 
     private final TagRepository tagRepository;
+    private final TagQueryRepository tagQueryRepository;
 
     @Transactional
     public TagInfo createTag(CreateTagCommand command) {
@@ -51,5 +54,13 @@ public class TagService {
         }
 
         tagRepository.deleteById(tagId);
+    }
+
+    /**
+     * 특정 피드에 대한 추천 태그 조회
+     * - 해당 피드에 다른 사용자들이 붙여놓은 태그를 추천
+     */
+    public List<TagSuggestionInfo> getSuggestionsForFeed(Long feedEntryId, Long memberId, int limit) {
+        return tagQueryRepository.findSuggestionsForFeed(feedEntryId, memberId, limit);
     }
 }
