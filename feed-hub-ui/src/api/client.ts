@@ -66,6 +66,18 @@ export const feedApi = {
     if (params.lastPublishedAt !== undefined) {
       searchParams.append('lastPublishedAt', params.lastPublishedAt);
     }
+    if (params.lastLikeCount !== undefined) {
+      searchParams.append('lastLikeCount', params.lastLikeCount.toString());
+    }
+    if (params.lastLikedAt !== undefined) {
+      searchParams.append('lastLikedAt', params.lastLikedAt);
+    }
+    if (params.sortType) {
+      searchParams.append('sortType', params.sortType);
+    }
+    if (params.likedOnly !== undefined) {
+      searchParams.append('likedOnly', params.likedOnly.toString());
+    }
     if (params.size !== undefined) {
       searchParams.append('size', params.size.toString());
     }

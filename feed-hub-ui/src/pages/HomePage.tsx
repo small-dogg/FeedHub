@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { FeedList, FilterBar, TagSelectModal } from '../components';
 import { feedApi } from '../api/client';
-import type { FeedEntry, User } from '../types';
+import type { FeedEntry, FeedSortType, User } from '../types';
 
 interface HomePageProps {
   user: User | null;
@@ -15,9 +15,13 @@ export function HomePage({ user, onLoginRequired }: HomePageProps) {
   const [hasMore, setHasMore] = useState(false);
   const [lastId, setLastId] = useState<number | null>(null);
   const [lastPublishedAt, setLastPublishedAt] = useState<string | null>(null);
+  const [lastLikeCount, setLastLikeCount] = useState<number | null>(null);
+  const [lastLikedAt, setLastLikedAt] = useState<string | null>(null);
   const [selectedRssSources, setSelectedRssSources] = useState<number[]>([]);
   const [selectedTags, setSelectedTags] = useState<number[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [sortType, setSortType] = useState<FeedSortType>('PUBLISHED_AT');
+  const [likedOnly, setLikedOnly] = useState(false);
 
   // Tag modal state
   const [isTagModalOpen, setIsTagModalOpen] = useState(false);
@@ -28,6 +32,8 @@ export function HomePage({ user, onLoginRequired }: HomePageProps) {
     setLoading(true);
     setLastId(null);
     setLastPublishedAt(null);
+    setLastLikeCount(null);
+    setLastLikedAt(null);
     setHasMore(false);
 
     try {
@@ -35,12 +41,16 @@ export function HomePage({ user, onLoginRequired }: HomePageProps) {
         rssSourceIds: selectedRssSources.length > 0 ? selectedRssSources : undefined,
         tagIds: selectedTags.length > 0 ? selectedTags : undefined,
         query: searchQuery.trim() || undefined,
+        sortType,
+        likedOnly: likedOnly || undefined,
         size: 20,
       });
 
       setFeeds(data.content);
       setLastId(data.lastId);
       setLastPublishedAt(data.lastPublishedAt);
+      setLastLikeCount(data.lastLikeCount);
+      setLastLikedAt(data.lastLikedAt);
       setHasMore(data.hasMore);
     } catch (error) {
       console.error('피드 로드 실패:', error);
@@ -48,7 +58,7 @@ export function HomePage({ user, onLoginRequired }: HomePageProps) {
     } finally {
       setLoading(false);
     }
-  }, [selectedRssSources, selectedTags, searchQuery]);
+  }, [selectedRssSources, selectedTags, searchQuery, sortType, likedOnly]);
 
   const handleLoadMore = async () => {
     if (loadingMore || !hasMore || !lastId) return;
@@ -61,12 +71,18 @@ export function HomePage({ user, onLoginRequired }: HomePageProps) {
         query: searchQuery.trim() || undefined,
         lastId: lastId,
         lastPublishedAt: lastPublishedAt ?? undefined,
+        lastLikeCount: lastLikeCount ?? undefined,
+        lastLikedAt: lastLikedAt ?? undefined,
+        sortType,
+        likedOnly: likedOnly || undefined,
         size: 20,
       });
 
       setFeeds(prev => [...prev, ...data.content]);
       setLastId(data.lastId);
       setLastPublishedAt(data.lastPublishedAt);
+      setLastLikeCount(data.lastLikeCount);
+      setLastLikedAt(data.lastLikedAt);
       setHasMore(data.hasMore);
     } catch (error) {
       console.error('피드 추가 로드 실패:', error);
@@ -95,6 +111,8 @@ export function HomePage({ user, onLoginRequired }: HomePageProps) {
     setSelectedRssSources([]);
     setSelectedTags([]);
     setSearchQuery('');
+    setSortType('PUBLISHED_AT');
+    setLikedOnly(false);
   };
 
   const handleTagClick = (tagId: number) => {
@@ -154,10 +172,14 @@ export function HomePage({ user, onLoginRequired }: HomePageProps) {
         selectedRssSources={selectedRssSources}
         selectedTags={selectedTags}
         searchQuery={searchQuery}
+        sortType={sortType}
+        likedOnly={likedOnly}
         isLoggedIn={user !== null}
         onRssSourceToggle={handleRssSourceToggle}
         onTagToggle={handleTagToggle}
         onSearchQueryChange={setSearchQuery}
+        onSortTypeChange={setSortType}
+        onLikedOnlyChange={setLikedOnly}
         onSearch={fetchInitial}
         onReset={handleReset}
       />

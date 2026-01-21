@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import type { RssSource, Tag } from '../types';
+import type { RssSource, Tag, FeedSortType } from '../types';
 import { rssSourceApi, tagApi } from '../api/client';
 import './FilterBar.css';
 
@@ -7,10 +7,14 @@ interface FilterBarProps {
   selectedRssSources: number[];
   selectedTags: number[];
   searchQuery: string;
+  sortType: FeedSortType;
+  likedOnly: boolean;
   isLoggedIn: boolean;
   onRssSourceToggle: (id: number) => void;
   onTagToggle: (id: number) => void;
   onSearchQueryChange: (query: string) => void;
+  onSortTypeChange: (sortType: FeedSortType) => void;
+  onLikedOnlyChange: (likedOnly: boolean) => void;
   onSearch: () => void;
   onReset: () => void;
 }
@@ -19,10 +23,14 @@ export function FilterBar({
   selectedRssSources,
   selectedTags,
   searchQuery,
+  sortType,
+  likedOnly,
   isLoggedIn,
   onRssSourceToggle,
   onTagToggle,
   onSearchQueryChange,
+  onSortTypeChange,
+  onLikedOnlyChange,
   onSearch,
   onReset,
 }: FilterBarProps) {
@@ -36,7 +44,6 @@ export function FilterBar({
         const sourcesData = await rssSourceApi.getAll();
         setRssSources(sourcesData);
 
-        // 태그는 로그인 상태에서만 조회
         if (isLoggedIn) {
           const tagsData = await tagApi.getAll();
           setTags(tagsData);
@@ -62,6 +69,24 @@ export function FilterBar({
     }
   };
 
+  const handleSortChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const value = e.target.value as FeedSortType;
+    onSortTypeChange(value);
+    // LIKED_AT 선택 시 likedOnly도 자동 활성화
+    if (value === 'LIKED_AT') {
+      onLikedOnlyChange(true);
+    }
+  };
+
+  const handleLikedOnlyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const checked = e.target.checked;
+    onLikedOnlyChange(checked);
+    // likedOnly 해제 시 LIKED_AT 정렬은 PUBLISHED_AT으로 변경
+    if (!checked && sortType === 'LIKED_AT') {
+      onSortTypeChange('PUBLISHED_AT');
+    }
+  };
+
   return (
     <div className="filter-bar">
       <div className="filter-section search-section">
@@ -74,6 +99,33 @@ export function FilterBar({
           onChange={(e) => onSearchQueryChange(e.target.value)}
           onKeyDown={handleKeyDown}
         />
+      </div>
+
+      <div className="filter-section">
+        <h4>정렬</h4>
+        <div className="sort-options">
+          <select
+            className="sort-select"
+            value={sortType}
+            onChange={handleSortChange}
+          >
+            <option value="PUBLISHED_AT">최신순</option>
+            <option value="LIKE_COUNT">좋아요순</option>
+            {isLoggedIn && likedOnly && (
+              <option value="LIKED_AT">좋아요한 시간순</option>
+            )}
+          </select>
+          {isLoggedIn && (
+            <label className="liked-only-label">
+              <input
+                type="checkbox"
+                checked={likedOnly}
+                onChange={handleLikedOnlyChange}
+              />
+              내가 좋아요한 피드만
+            </label>
+          )}
+        </div>
       </div>
 
       <div className="filter-section">

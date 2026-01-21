@@ -10,6 +10,7 @@ import world.jerry.feedhub.api.application.feed.FeedQueryService;
 import world.jerry.feedhub.api.application.feed.dto.FeedEntryInfo;
 import world.jerry.feedhub.api.application.feed.dto.FeedEntryPage;
 import world.jerry.feedhub.api.application.feed.dto.FeedSearchCriteria;
+import world.jerry.feedhub.api.application.feed.dto.FeedSortType;
 import world.jerry.feedhub.api.interfaces.rest.feed.dto.FeedEntryResponse;
 import world.jerry.feedhub.api.interfaces.rest.feed.dto.FeedPageResponse;
 import world.jerry.feedhub.api.interfaces.rest.feed.dto.LikeResponse;
@@ -34,9 +35,27 @@ public class FeedController {
             @RequestParam(required = false) String query,
             @RequestParam(required = false) Long lastId,
             @RequestParam(required = false) Instant lastPublishedAt,
+            @RequestParam(required = false) Long lastLikeCount,
+            @RequestParam(required = false) Instant lastLikedAt,
+            @RequestParam(defaultValue = "PUBLISHED_AT") FeedSortType sortType,
+            @RequestParam(defaultValue = "false") Boolean likedOnly,
             @RequestParam(defaultValue = "20") int size
     ) {
-        FeedSearchCriteria criteria = new FeedSearchCriteria(memberId, rssSourceIds, tagIds, query, lastId, lastPublishedAt, size);
+        // likedOnly=true인 경우 로그인 필수
+        if (Boolean.TRUE.equals(likedOnly) && memberId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        // LIKED_AT 정렬은 로그인 필수
+        if (sortType == FeedSortType.LIKED_AT && memberId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        FeedSearchCriteria criteria = new FeedSearchCriteria(
+                memberId, rssSourceIds, tagIds, query,
+                lastId, lastPublishedAt, lastLikeCount, lastLikedAt,
+                sortType, likedOnly, size
+        );
         FeedEntryPage feedPage = feedQueryService.searchFeeds(criteria);
         return ResponseEntity.ok(FeedPageResponse.from(feedPage));
     }
@@ -56,8 +75,6 @@ public class FeedController {
 
     /**
      * 피드 읽음 처리 및 조회수 증가
-     * 로그인 상태: 읽음 기록 저장 + 조회수 증가 (최초 1회만)
-     * 비로그인 상태: 조회수만 증가
      */
     @PostMapping("/{id}/view")
     public ResponseEntity<Void> markAsRead(
@@ -70,7 +87,6 @@ public class FeedController {
 
     /**
      * 피드 좋아요 토글
-     * 로그인 필수
      */
     @PostMapping("/{id}/like")
     public ResponseEntity<LikeResponse> toggleLike(

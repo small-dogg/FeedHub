@@ -17,7 +17,8 @@ public record FeedEntryResponse(
         List<TagSummary> tags,
         boolean isRead,
         long likeCount,
-        boolean isLiked
+        boolean isLiked,
+        Instant likedAt
 ) {
     public static FeedEntryResponse from(FeedEntryInfo info) {
         List<TagSummary> tagSummaries = info.tags() != null
@@ -37,7 +38,8 @@ public record FeedEntryResponse(
                 tagSummaries,
                 info.isRead(),
                 info.likeCount(),
-                info.isLiked()
+                info.isLiked(),
+                info.likedAt()
         );
     }
 

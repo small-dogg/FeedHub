@@ -21,18 +21,24 @@ public record FeedEntryInfo(
         List<TagSummary> tags,
         boolean isRead,
         long likeCount,
-        boolean isLiked
+        boolean isLiked,
+        Instant likedAt
 ) {
     public static FeedEntryInfo from(FeedEntry entry, String blogName, String siteUrl, Set<Tag> tags) {
-        return from(entry, blogName, siteUrl, tags, false, 0L, false);
+        return from(entry, blogName, siteUrl, tags, false, 0L, false, null);
     }
 
     public static FeedEntryInfo from(FeedEntry entry, String blogName, String siteUrl, Set<Tag> tags, boolean isRead) {
-        return from(entry, blogName, siteUrl, tags, isRead, 0L, false);
+        return from(entry, blogName, siteUrl, tags, isRead, 0L, false, null);
     }
 
     public static FeedEntryInfo from(FeedEntry entry, String blogName, String siteUrl, Set<Tag> tags,
                                      boolean isRead, long likeCount, boolean isLiked) {
+        return from(entry, blogName, siteUrl, tags, isRead, likeCount, isLiked, null);
+    }
+
+    public static FeedEntryInfo from(FeedEntry entry, String blogName, String siteUrl, Set<Tag> tags,
+                                     boolean isRead, long likeCount, boolean isLiked, Instant likedAt) {
         List<TagSummary> tagSummaries = tags != null
                 ? tags.stream().map(TagSummary::from).toList()
                 : List.of();
@@ -50,7 +56,8 @@ public record FeedEntryInfo(
                 tagSummaries,
                 isRead,
                 likeCount,
-                isLiked
+                isLiked,
+                likedAt
         );
     }
 

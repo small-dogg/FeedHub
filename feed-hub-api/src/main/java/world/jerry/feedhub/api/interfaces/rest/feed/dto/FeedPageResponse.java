@@ -9,6 +9,8 @@ public record FeedPageResponse(
         List<FeedEntryResponse> content,
         Long lastId,
         Instant lastPublishedAt,
+        Long lastLikeCount,
+        Instant lastLikedAt,
         boolean hasMore
 ) {
     public static FeedPageResponse from(FeedEntryPage feedPage) {
@@ -19,6 +21,8 @@ public record FeedPageResponse(
                 content,
                 feedPage.lastId(),
                 feedPage.lastPublishedAt(),
+                feedPage.lastLikeCount(),
+                feedPage.lastLikedAt(),
                 feedPage.hasMore()
         );
     }

@@ -42,6 +42,7 @@ export interface FeedEntry {
   isRead: boolean;
   likeCount: number;
   isLiked: boolean;
+  likedAt: string | null;
 }
 
 export interface LikeResponse {
@@ -50,10 +51,14 @@ export interface LikeResponse {
   likeCount: number;
 }
 
+export type FeedSortType = 'PUBLISHED_AT' | 'LIKE_COUNT' | 'LIKED_AT';
+
 export interface FeedSlice {
   content: FeedEntry[];
   lastId: number | null;
   lastPublishedAt: string | null;
+  lastLikeCount: number | null;
+  lastLikedAt: string | null;
   hasMore: boolean;
 }
 
@@ -63,6 +68,10 @@ export interface FeedSearchParams {
   query?: string;
   lastId?: number;
   lastPublishedAt?: string;
+  lastLikeCount?: number;
+  lastLikedAt?: string;
+  sortType?: FeedSortType;
+  likedOnly?: boolean;
   size?: number;
 }
 

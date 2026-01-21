@@ -33,4 +33,12 @@ public interface FeedLikeRepository extends JpaRepository<FeedLike, Long> {
     Set<Long> findLikedFeedEntryIdsByMemberIdAndFeedEntryIdIn(
             @Param("memberId") Long memberId,
             @Param("feedEntryIds") Set<Long> feedEntryIds);
+
+    /**
+     * 특정 회원이 좋아요한 피드의 좋아요 시간 조회 (feedEntryId, createdAt)
+     */
+    @Query("SELECT f.feedEntryId, f.createdAt FROM FeedLike f WHERE f.memberId = :memberId AND f.feedEntryId IN :feedEntryIds")
+    Set<Object[]> findLikedAtByMemberIdAndFeedEntryIdIn(
+            @Param("memberId") Long memberId,
+            @Param("feedEntryIds") Set<Long> feedEntryIds);
 }
