@@ -1,7 +1,7 @@
 package world.jerry.feedhub.api.infrastructure.kafka.message;
 
-import world.jerry.feedhub.api.domain.rss.BlogType;
-import world.jerry.feedhub.api.domain.rss.CrawlMode;
+import world.jerry.feedhub.common.domain.BlogType;
+import world.jerry.feedhub.common.domain.CrawlMode;
 
 import java.time.Instant;
 

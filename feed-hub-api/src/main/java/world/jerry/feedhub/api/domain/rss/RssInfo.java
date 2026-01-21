@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import world.jerry.feedhub.common.domain.BlogType;
 
 import java.time.Instant;
 

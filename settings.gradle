@@ -1,6 +1,7 @@
 rootProject.name = 'feed-hub'
 
+include 'feed-hub-common'
 include 'feed-hub-api'
-include 'feed-hub-crawler'
+include 'feed-hub-collector'
 include 'feed-hub-scheduler'
 include 'feed-hub-ui'

@@ -62,11 +62,9 @@ export interface FeedSearchParams {
 }
 
 export interface SyncResult {
-  rssSourceId: number;
-  blogName: string;
-  syncedCount: number;
-  skippedCount: number;
-  lastSyncAt: string;
+  commandId: string;
+  status: string;
+  message: string;
 }
 
 export interface CrawlResult {
@@ -82,7 +80,8 @@ export interface OpmlImportResult {
   imported: number;
   skipped: number;
   skippedUrls: string[];
-  syncResults: SyncResult[];
+  syncRequestedIds: number[];
+  message: string;
 }
 
 // Auth types

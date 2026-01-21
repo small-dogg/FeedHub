@@ -165,28 +165,23 @@ export function AdminModal({ isOpen, onClose }: AdminModalProps) {
     setSyncingId(id);
     try {
       const result = await rssSourceApi.sync(id);
-      alert(`동기화 완료: ${result.syncedCount}개 추가, ${result.skippedCount}개 건너뜀`);
-      fetchData();
+      alert(result.message);
     } catch (error) {
-      console.error('동기화 실패:', error);
-      alert('동기화에 실패했습니다.');
+      console.error('동기화 요청 실패:', error);
+      alert('동기화 요청에 실패했습니다.');
     } finally {
       setSyncingId(null);
     }
   };
 
   const handleSyncAll = async () => {
-    if (!confirm('모든 RSS 소스를 동기화하시겠습니까?')) return;
     setSyncingAll(true);
     try {
-      const results = await rssSourceApi.syncAll();
-      const totalSynced = results.reduce((sum, r) => sum + r.syncedCount, 0);
-      const totalSkipped = results.reduce((sum, r) => sum + r.skippedCount, 0);
-      alert(`전체 동기화 완료: ${totalSynced}개 추가, ${totalSkipped}개 건너뜀`);
-      fetchData();
+      const result = await rssSourceApi.syncAll();
+      alert(result.message);
     } catch (error) {
-      console.error('전체 동기화 실패:', error);
-      alert('전체 동기화에 실패했습니다.');
+      console.error('전체 동기화 요청 실패:', error);
+      alert('전체 동기화 요청에 실패했습니다.');
     } finally {
       setSyncingAll(false);
     }

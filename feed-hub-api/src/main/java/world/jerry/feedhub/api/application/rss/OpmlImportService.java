@@ -7,7 +7,6 @@ import org.springframework.transaction.annotation.Transactional;
 import world.jerry.feedhub.api.application.rss.dto.OpmlImportResult;
 import world.jerry.feedhub.api.application.rss.dto.RegisterRssInfoCommand;
 import world.jerry.feedhub.api.application.rss.dto.RssInfoDetail;
-import world.jerry.feedhub.api.application.rss.dto.SyncResult;
 import world.jerry.feedhub.api.domain.rss.RssInfoRepository;
 import world.jerry.feedhub.api.infrastructure.opml.OpmlParser;
 import world.jerry.feedhub.api.infrastructure.opml.ParsedOpmlEntry;
@@ -24,7 +23,7 @@ public class OpmlImportService {
     private final OpmlParser opmlParser;
     private final RssInfoRepository rssInfoRepository;
     private final RssInfoService rssInfoService;
-    private final RssSyncService rssSyncService;
+    private final CollectorCommandService collectorCommandService;
 
     @Transactional
     public OpmlImportResult importOpml(InputStream opmlStream, boolean syncAfterImport) {
@@ -32,7 +31,7 @@ public class OpmlImportService {
 
         int imported = 0;
         List<String> skippedUrls = new ArrayList<>();
-        List<SyncResult> syncResults = new ArrayList<>();
+        List<Long> syncRequestedIds = new ArrayList<>();
 
         for (ParsedOpmlEntry entry : entries) {
             if (rssInfoRepository.existsByRssUrl(entry.xmlUrl())) {
@@ -54,16 +53,9 @@ public class OpmlImportService {
                         )
                 );
                 imported++;
+                syncRequestedIds.add(registered.id());
                 log.info("RSS 소스 등록 완료: {} ({})", entry.title(), entry.xmlUrl());
 
-                if (syncAfterImport) {
-                    try {
-                        SyncResult sync = rssSyncService.syncRssSource(registered.id());
-                        syncResults.add(sync);
-                    } catch (Exception e) {
-                        log.warn("RSS 동기화 실패: {} - {}", entry.xmlUrl(), e.getMessage());
-                    }
-                }
             } catch (Exception e) {
                 log.error("RSS 소스 등록 실패: {} - {}", entry.xmlUrl(), e.getMessage());
                 skippedUrls.add(entry.xmlUrl());
@@ -73,6 +65,6 @@ public class OpmlImportService {
         log.info("OPML 임포트 완료: 총 {}개 중 {}개 등록, {}개 건너뜀",
                 entries.size(), imported, skippedUrls.size());
 
-        return new OpmlImportResult(entries.size(), imported, skippedUrls, syncResults);
+        return new OpmlImportResult(entries.size(), imported, skippedUrls, syncRequestedIds);
     }
 }

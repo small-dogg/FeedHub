@@ -17,7 +17,6 @@ https://github.com/user-attachments/assets/a14614f1-ec28-42b9-a8ef-84e338691ddb
 FeedHub/
 ├── feed-hub-api/        # Spring Boot 백엔드 API
 ├── feed-hub-crawler/    # 크롤러 모듈 (Kafka Consumer, 블로그 크롤링)
-├── feed-hub-scheduler/  # 스케줄러 모듈 (RSS 동기화)
 └── feed-hub-ui/         # React 프론트엔드
 ```
 

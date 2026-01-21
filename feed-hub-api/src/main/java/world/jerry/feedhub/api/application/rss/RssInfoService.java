@@ -6,8 +6,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import world.jerry.feedhub.api.application.rss.dto.RegisterRssInfoCommand;
 import world.jerry.feedhub.api.application.rss.dto.RssInfoDetail;
-import world.jerry.feedhub.api.domain.rss.BlogType;
-import world.jerry.feedhub.api.domain.rss.CrawlMode;
+import world.jerry.feedhub.common.domain.BlogType;
+import world.jerry.feedhub.common.domain.CrawlMode;
 import world.jerry.feedhub.api.domain.rss.RssInfo;
 import world.jerry.feedhub.api.domain.rss.RssInfoRepository;
 import world.jerry.feedhub.api.infrastructure.kafka.BlogTypeDetector;
@@ -25,7 +25,7 @@ import java.util.NoSuchElementException;
 public class RssInfoService {
 
     private final RssInfoRepository rssInfoRepository;
-    private final RssSyncService rssSyncService;
+    private final CollectorCommandService collectorCommandService;
     private final CrawlRequestProducer crawlRequestProducer;
     private final BlogTypeDetector blogTypeDetector;
     private final RssParser rssParser;
@@ -68,11 +68,11 @@ public class RssInfoService {
 
         RssInfo saved = rssInfoRepository.save(rssInfo);
 
-        // 최초 등록 시 RSS 동기화 수행
+        // 최초 등록 시 RSS 동기화 Command 발행 (비동기)
         try {
-            rssSyncService.syncRssSource(saved.getId());
+            collectorCommandService.requestSync(saved.getId(), "api:register");
         } catch (Exception e) {
-            log.warn("RSS 최초 동기화 실패: id={}, blogName={}, error={}",
+            log.warn("RSS 동기화 Command 발행 실패: id={}, blogName={}, error={}",
                     saved.getId(), saved.getBlogName(), e.getMessage());
         }
 

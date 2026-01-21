@@ -1,12 +1,12 @@
 package world.jerry.feedhub.api.infrastructure.kafka;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.SendResult;
 import org.springframework.stereotype.Component;
-import world.jerry.feedhub.api.domain.rss.BlogType;
-import world.jerry.feedhub.api.domain.rss.CrawlMode;
+import world.jerry.feedhub.common.domain.BlogType;
+import world.jerry.feedhub.common.domain.CrawlMode;
 import world.jerry.feedhub.api.domain.rss.RssInfo;
 import world.jerry.feedhub.api.infrastructure.kafka.message.CrawlRequestMessage;
 
@@ -17,11 +17,17 @@ import java.util.concurrent.CompletableFuture;
  */
 @Slf4j
 @Component
-@RequiredArgsConstructor
 public class CrawlRequestProducer {
 
-    private final KafkaTemplate<String, CrawlRequestMessage> kafkaTemplate;
+    private final KafkaTemplate<String, CrawlRequestMessage> crawlKafkaTemplate;
     private final BlogTypeDetector blogTypeDetector;
+
+    public CrawlRequestProducer(
+            @Qualifier("crawlKafkaTemplate") KafkaTemplate<String, CrawlRequestMessage> crawlKafkaTemplate,
+            BlogTypeDetector blogTypeDetector) {
+        this.crawlKafkaTemplate = crawlKafkaTemplate;
+        this.blogTypeDetector = blogTypeDetector;
+    }
 
     /**
      * RSS 정보를 기반으로 크롤링 요청 발행
@@ -60,7 +66,7 @@ public class CrawlRequestProducer {
         String partitionKey = String.valueOf(rssInfo.getId());
 
         CompletableFuture<SendResult<String, CrawlRequestMessage>> future =
-                kafkaTemplate.send(topicName, partitionKey, message);
+                crawlKafkaTemplate.send(topicName, partitionKey, message);
 
         future.whenComplete((result, ex) -> {
             if (ex != null) {

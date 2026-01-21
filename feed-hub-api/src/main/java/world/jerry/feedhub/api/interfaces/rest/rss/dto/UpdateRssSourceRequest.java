@@ -1,7 +1,7 @@
 package world.jerry.feedhub.api.interfaces.rest.rss.dto;
 
 import jakarta.validation.constraints.Size;
-import world.jerry.feedhub.api.domain.rss.BlogType;
+import world.jerry.feedhub.common.domain.BlogType;
 
 public record UpdateRssSourceRequest(
         @Size(max = 255, message = "Blog name must be at most 255 characters")

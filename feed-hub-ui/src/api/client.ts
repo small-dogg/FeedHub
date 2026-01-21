@@ -120,8 +120,8 @@ export const rssSourceApi = {
     return response.data;
   },
 
-  syncAll: async (): Promise<SyncResult[]> => {
-    const response = await api.post<SyncResult[]>('/rss-sources/sync-all');
+  syncAll: async (): Promise<SyncResult> => {
+    const response = await api.post<SyncResult>('/rss-sources/sync-all');
     return response.data;
   },
 

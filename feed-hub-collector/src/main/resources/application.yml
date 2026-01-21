@@ -1,0 +1,52 @@
+spring:
+  application:
+    name: feed-hub-collector
+
+  datasource:
+    url: jdbc:postgresql://jerry.world:32222/feed_hub
+    username: test
+    password: test
+    driver-class-name: org.postgresql.Driver
+
+  flyway:
+    enabled: false
+
+  jpa:
+    hibernate:
+      ddl-auto: none
+    open-in-view: false
+    properties:
+      hibernate:
+        default_batch_fetch_size: 100
+
+  kafka:
+    bootstrap-servers: localhost:30092
+    consumer:
+      group-id: feed-hub-collector-group
+      auto-offset-reset: earliest
+      enable-auto-commit: false
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: world.jerry.feedhub.common.command,world.jerry.feedhub.collector.message
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      acks: all
+      retries: 3
+      properties:
+        enable.idempotence: true
+    listener:
+      ack-mode: manual_immediate
+      concurrency: 3
+
+logging:
+  level:
+    world.jerry.feedhub.collector: DEBUG
+    org.springframework.kafka: INFO
+
+collector:
+  max-pages-per-crawl: 1000
+  request-delay-ms: 1000
+  connection-timeout-ms: 10000
+  read-timeout-ms: 30000

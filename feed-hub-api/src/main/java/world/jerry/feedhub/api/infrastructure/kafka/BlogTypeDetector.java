@@ -1,7 +1,7 @@
 package world.jerry.feedhub.api.infrastructure.kafka;
 
 import org.springframework.stereotype.Component;
-import world.jerry.feedhub.api.domain.rss.BlogType;
+import world.jerry.feedhub.common.domain.BlogType;
 
 import java.util.Set;
 import java.util.regex.Pattern;

@@ -1,6 +1,6 @@
 package world.jerry.feedhub.api.application.rss.dto;
 
-import world.jerry.feedhub.api.domain.rss.BlogType;
+import world.jerry.feedhub.common.domain.BlogType;
 
 public record RegisterRssInfoCommand(
         String blogName,

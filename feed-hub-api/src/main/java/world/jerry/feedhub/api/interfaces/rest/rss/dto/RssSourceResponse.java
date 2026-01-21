@@ -1,7 +1,7 @@
 package world.jerry.feedhub.api.interfaces.rest.rss.dto;
 
 import world.jerry.feedhub.api.application.rss.dto.RssInfoDetail;
-import world.jerry.feedhub.api.domain.rss.BlogType;
+import world.jerry.feedhub.common.domain.BlogType;
 
 import java.time.Instant;
 

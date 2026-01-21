@@ -6,6 +6,6 @@ public record OpmlImportResult(
         int totalFound,
         int imported,
         List<String> skippedUrls,
-        List<SyncResult> syncResults
+        List<Long> syncRequestedIds
 ) {
 }

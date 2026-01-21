@@ -9,19 +9,17 @@ public record OpmlImportResponse(
         int imported,
         int skipped,
         List<String> skippedUrls,
-        List<SyncResponse> syncResults
+        List<Long> syncRequestedIds,
+        String message
 ) {
     public static OpmlImportResponse from(OpmlImportResult result) {
-        List<SyncResponse> syncResponses = result.syncResults().stream()
-                .map(SyncResponse::from)
-                .toList();
-
         return new OpmlImportResponse(
                 result.totalFound(),
                 result.imported(),
                 result.skippedUrls().size(),
                 result.skippedUrls(),
-                syncResponses
+                result.syncRequestedIds(),
+                "OPML 임포트 완료. 동기화는 비동기로 처리됩니다."
         );
     }
 }

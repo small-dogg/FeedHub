@@ -9,20 +9,20 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import world.jerry.feedhub.api.application.rss.CollectorCommandService;
 import world.jerry.feedhub.api.application.rss.CrawlService;
 import world.jerry.feedhub.api.application.rss.OpmlExportService;
 import world.jerry.feedhub.api.application.rss.OpmlImportService;
 import world.jerry.feedhub.api.application.rss.RssInfoService;
-import world.jerry.feedhub.api.application.rss.RssSyncService;
 import world.jerry.feedhub.api.application.rss.dto.OpmlImportResult;
 import world.jerry.feedhub.api.application.rss.dto.RssInfoDetail;
-import world.jerry.feedhub.api.domain.rss.BlogType;
-import world.jerry.feedhub.api.domain.rss.CrawlMode;
+import world.jerry.feedhub.common.domain.BlogType;
+import world.jerry.feedhub.common.domain.CrawlMode;
+import world.jerry.feedhub.api.interfaces.rest.rss.dto.AsyncCommandResponse;
 import world.jerry.feedhub.api.interfaces.rest.rss.dto.CrawlResponse;
 import world.jerry.feedhub.api.interfaces.rest.rss.dto.OpmlImportResponse;
 import world.jerry.feedhub.api.interfaces.rest.rss.dto.RegisterRssSourceRequest;
 import world.jerry.feedhub.api.interfaces.rest.rss.dto.RssSourceResponse;
-import world.jerry.feedhub.api.interfaces.rest.rss.dto.SyncResponse;
 import world.jerry.feedhub.api.interfaces.rest.rss.dto.UpdateRssSourceRequest;
 
 import java.io.IOException;
@@ -37,7 +37,7 @@ import java.util.List;
 public class RssSourceController {
 
     private final RssInfoService rssInfoService;
-    private final RssSyncService rssSyncService;
+    private final CollectorCommandService collectorCommandService;
     private final CrawlService crawlService;
     private final OpmlImportService opmlImportService;
     private final OpmlExportService opmlExportService;
@@ -69,16 +69,15 @@ public class RssSourceController {
     }
 
     @PostMapping("/{id}/sync")
-    public ResponseEntity<SyncResponse> syncRssSource(@PathVariable Long id) {
-        return ResponseEntity.ok(SyncResponse.from(rssSyncService.syncRssSource(id)));
+    public ResponseEntity<AsyncCommandResponse> syncRssSource(@PathVariable Long id) {
+        String commandId = collectorCommandService.requestSync(id, "api:user");
+        return ResponseEntity.accepted().body(AsyncCommandResponse.syncAccepted(commandId));
     }
 
     @PostMapping("/sync-all")
-    public ResponseEntity<List<SyncResponse>> syncAllRssSources() {
-        List<SyncResponse> results = rssSyncService.syncAllRssSources().stream()
-                .map(SyncResponse::from)
-                .toList();
-        return ResponseEntity.ok(results);
+    public ResponseEntity<AsyncCommandResponse> syncAllRssSources() {
+        collectorCommandService.requestSyncAll("api:user");
+        return ResponseEntity.accepted().body(AsyncCommandResponse.syncAllAccepted("batch"));
     }
 
     @PostMapping("/{id}/crawl")
