@@ -35,7 +35,6 @@ Project rules for Claude Code.
 
 ## Database
 - PostgreSQL.
-- Local datasource: `jerry.world:32222/product`
 - Credentials provided separately.
 - Use JPA.
 - Use QueryDSL for complex queries.
@@ -68,3 +67,6 @@ Project rules for Claude Code.
 - Prefer structured answers.
 - Avoid verbose explanations unless requested.
 - Use code blocks only when necessary.
+
+## AI Use History
+Record prompt history and task details in HISTORY.md.
