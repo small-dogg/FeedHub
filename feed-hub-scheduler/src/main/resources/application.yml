@@ -3,13 +3,13 @@ spring:
     name: feed-hub-scheduler
 
   kafka:
-    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:30092}
 
 # Scheduler settings
 scheduler:
   feed-sync:
     enabled: true
-    cron: "0 0 * * * *"  # Every hour
+    cron: "0 2 * * * *"  # Every hour
   full-crawl:
     enabled: true
     cron: "0 0 2 * * *"  # Every day at 2 AM
