@@ -54,7 +54,8 @@ public class KafkaConsumerConfig {
         props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
         props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, false);
 
-        JsonDeserializer<CrawlRequestMessage> deserializer = new JsonDeserializer<>(CrawlRequestMessage.class, objectMapper());
+        JsonDeserializer<CrawlRequestMessage> deserializer = new JsonDeserializer<>(CrawlRequestMessage.class,
+                objectMapper());
         deserializer.setRemoveTypeHeaders(false);
         deserializer.addTrustedPackages("world.jerry.feedhub.*");
         deserializer.setUseTypeMapperForKey(true);
@@ -62,14 +63,12 @@ public class KafkaConsumerConfig {
         return new DefaultKafkaConsumerFactory<>(
                 props,
                 new StringDeserializer(),
-                deserializer
-        );
+                deserializer);
     }
 
     @Bean
     public ConcurrentKafkaListenerContainerFactory<String, CrawlRequestMessage> kafkaListenerContainerFactory() {
-        ConcurrentKafkaListenerContainerFactory<String, CrawlRequestMessage> factory =
-                new ConcurrentKafkaListenerContainerFactory<>();
+        ConcurrentKafkaListenerContainerFactory<String, CrawlRequestMessage> factory = new ConcurrentKafkaListenerContainerFactory<>();
         factory.setConsumerFactory(consumerFactory());
         factory.setConcurrency(3);
         factory.getContainerProperties().setAckMode(ContainerProperties.AckMode.MANUAL_IMMEDIATE);
@@ -86,7 +85,8 @@ public class KafkaConsumerConfig {
         props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
         props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, false);
 
-        JsonDeserializer<SyncRssFeedCommand> deserializer = new JsonDeserializer<>(SyncRssFeedCommand.class, objectMapper());
+        JsonDeserializer<SyncRssFeedCommand> deserializer = new JsonDeserializer<>(SyncRssFeedCommand.class,
+                objectMapper());
         deserializer.setRemoveTypeHeaders(false);
         deserializer.addTrustedPackages("world.jerry.feedhub.*");
         deserializer.setUseTypeMapperForKey(true);
@@ -94,14 +94,12 @@ public class KafkaConsumerConfig {
         return new DefaultKafkaConsumerFactory<>(
                 props,
                 new StringDeserializer(),
-                deserializer
-        );
+                deserializer);
     }
 
     @Bean
     public ConcurrentKafkaListenerContainerFactory<String, SyncRssFeedCommand> syncCommandListenerContainerFactory() {
-        ConcurrentKafkaListenerContainerFactory<String, SyncRssFeedCommand> factory =
-                new ConcurrentKafkaListenerContainerFactory<>();
+        ConcurrentKafkaListenerContainerFactory<String, SyncRssFeedCommand> factory = new ConcurrentKafkaListenerContainerFactory<>();
         factory.setConsumerFactory(syncCommandConsumerFactory());
         factory.setConcurrency(3);
         factory.getContainerProperties().setAckMode(ContainerProperties.AckMode.MANUAL_IMMEDIATE);
@@ -118,7 +116,8 @@ public class KafkaConsumerConfig {
         props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
         props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, false);
 
-        JsonDeserializer<SyncAllFeedsCommand> deserializer = new JsonDeserializer<>(SyncAllFeedsCommand.class, objectMapper());
+        JsonDeserializer<SyncAllFeedsCommand> deserializer = new JsonDeserializer<>(SyncAllFeedsCommand.class,
+                objectMapper());
         deserializer.setRemoveTypeHeaders(false);
         deserializer.addTrustedPackages("world.jerry.feedhub.*");
         deserializer.setUseTypeMapperForKey(true);
@@ -126,41 +125,15 @@ public class KafkaConsumerConfig {
         return new DefaultKafkaConsumerFactory<>(
                 props,
                 new StringDeserializer(),
-                deserializer
-        );
+                deserializer);
     }
 
     @Bean
     public ConcurrentKafkaListenerContainerFactory<String, SyncAllFeedsCommand> syncAllCommandListenerContainerFactory() {
-        ConcurrentKafkaListenerContainerFactory<String, SyncAllFeedsCommand> factory =
-                new ConcurrentKafkaListenerContainerFactory<>();
+        ConcurrentKafkaListenerContainerFactory<String, SyncAllFeedsCommand> factory = new ConcurrentKafkaListenerContainerFactory<>();
         factory.setConsumerFactory(syncAllCommandConsumerFactory());
-        factory.setConcurrency(1);  // Single consumer for sync-all to avoid duplicate processing
+        factory.setConcurrency(1); // Single consumer for sync-all to avoid duplicate processing
         factory.getContainerProperties().setAckMode(ContainerProperties.AckMode.MANUAL_IMMEDIATE);
         return factory;
-    }
-
-    // ========== Event Producer ==========
-
-    @Bean
-    public ProducerFactory<String, Event> eventProducerFactory() {
-        Map<String, Object> props = new HashMap<>();
-        props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
-        props.put(ProducerConfig.ACKS_CONFIG, "all");
-        props.put(ProducerConfig.RETRIES_CONFIG, 3);
-        props.put(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, true);
-
-        JsonSerializer<Event> serializer = new JsonSerializer<>(objectMapper());
-
-        return new DefaultKafkaProducerFactory<>(
-                props,
-                new StringSerializer(),
-                serializer
-        );
-    }
-
-    @Bean
-    public KafkaTemplate<String, Event> kafkaTemplate() {
-        return new KafkaTemplate<>(eventProducerFactory());
     }
 }
