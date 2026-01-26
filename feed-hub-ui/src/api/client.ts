@@ -78,6 +78,9 @@ export const feedApi = {
     if (params.likedOnly !== undefined) {
       searchParams.append('likedOnly', params.likedOnly.toString());
     }
+    if (params.mode) {
+      searchParams.append('mode', params.mode);
+    }
     if (params.size !== undefined) {
       searchParams.append('size', params.size.toString());
     }
@@ -96,6 +99,22 @@ export const feedApi = {
 
   toggleLike: async (feedId: number): Promise<LikeResponse> => {
     const response = await api.post<LikeResponse>(`/feeds/${feedId}/like`);
+    return response.data;
+  },
+};
+
+// Subscription API
+export const subscriptionApi = {
+  subscribe: async (rssInfoId: number): Promise<void> => {
+    await api.post(`/subscriptions/${rssInfoId}`);
+  },
+
+  unsubscribe: async (rssInfoId: number): Promise<void> => {
+    await api.delete(`/subscriptions/${rssInfoId}`);
+  },
+
+  getMySubscriptions: async (): Promise<number[]> => {
+    const response = await api.get<number[]>('/subscriptions');
     return response.data;
   },
 };

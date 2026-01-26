@@ -17,12 +17,18 @@ public record FeedSearchCriteria(
         Instant lastLikedAt,
         FeedSortType sortType,
         Boolean likedOnly,
-        int size
-) {
+        Boolean followedOnly,
+        int size) {
     public FeedSearchCriteria {
-        if (size <= 0) size = 20;
-        if (size > 100) size = 100;
-        if (sortType == null) sortType = FeedSortType.PUBLISHED_AT;
-        if (likedOnly == null) likedOnly = false;
+        if (size <= 0)
+            size = 20;
+        if (size > 100)
+            size = 100;
+        if (sortType == null)
+            sortType = FeedSortType.PUBLISHED_AT;
+        if (likedOnly == null)
+            likedOnly = false;
+        if (followedOnly == null)
+            followedOnly = false;
     }
 }

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { FeedList, FilterBar, TagSelectModal } from '../components';
-import { feedApi } from '../api/client';
+import { feedApi, subscriptionApi } from '../api/client';
 import type { FeedEntry, FeedSortType, User } from '../types';
 
 interface HomePageProps {
@@ -22,11 +22,30 @@ export function HomePage({ user, onLoginRequired }: HomePageProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [sortType, setSortType] = useState<FeedSortType>('PUBLISHED_AT');
   const [likedOnly, setLikedOnly] = useState(false);
+  const [followedOnly, setFollowedOnly] = useState(false);
+  const [subscriptions, setSubscriptions] = useState<number[]>([]);
 
   // Tag modal state
   const [isTagModalOpen, setIsTagModalOpen] = useState(false);
   const [tagModalFeedId, setTagModalFeedId] = useState<number | null>(null);
   const [tagModalCurrentTags, setTagModalCurrentTags] = useState<{ id: number; name: string }[]>([]);
+
+  const fetchSubscriptions = useCallback(async () => {
+    if (!user) {
+      setSubscriptions([]);
+      return;
+    }
+    try {
+      const subs = await subscriptionApi.getMySubscriptions();
+      setSubscriptions(subs);
+    } catch (error) {
+      console.error('구독 목록 로드 실패:', error);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    fetchSubscriptions();
+  }, [fetchSubscriptions]);
 
   const fetchInitial = useCallback(async () => {
     setLoading(true);
@@ -43,6 +62,7 @@ export function HomePage({ user, onLoginRequired }: HomePageProps) {
         query: searchQuery.trim() || undefined,
         sortType,
         likedOnly: likedOnly || undefined,
+        mode: followedOnly ? 'FOLLOWING' : undefined,
         size: 20,
       });
 
@@ -58,7 +78,7 @@ export function HomePage({ user, onLoginRequired }: HomePageProps) {
     } finally {
       setLoading(false);
     }
-  }, [selectedRssSources, selectedTags, searchQuery, sortType, likedOnly]);
+  }, [selectedRssSources, selectedTags, searchQuery, sortType, likedOnly, followedOnly]);
 
   const handleLoadMore = async () => {
     if (loadingMore || !hasMore || !lastId) return;
@@ -75,6 +95,7 @@ export function HomePage({ user, onLoginRequired }: HomePageProps) {
         lastLikedAt: lastLikedAt ?? undefined,
         sortType,
         likedOnly: likedOnly || undefined,
+        mode: followedOnly ? 'FOLLOWING' : undefined,
         size: 20,
       });
 
@@ -166,6 +187,32 @@ export function HomePage({ user, onLoginRequired }: HomePageProps) {
     );
   };
 
+  const handleSubscribe = async (rssId: number) => {
+    if (!user) {
+      onLoginRequired();
+      return;
+    }
+    try {
+      await subscriptionApi.subscribe(rssId);
+      setSubscriptions((prev) => [...prev, rssId]);
+    } catch (error) {
+      console.error('구독 실패:', error);
+    }
+  };
+
+  const handleUnsubscribe = async (rssId: number) => {
+    if (!user) {
+      onLoginRequired();
+      return;
+    }
+    try {
+      await subscriptionApi.unsubscribe(rssId);
+      setSubscriptions((prev) => prev.filter((id) => id !== rssId));
+    } catch (error) {
+      console.error('구독 취소 실패:', error);
+    }
+  };
+
   return (
     <>
       <FilterBar
@@ -174,12 +221,17 @@ export function HomePage({ user, onLoginRequired }: HomePageProps) {
         searchQuery={searchQuery}
         sortType={sortType}
         likedOnly={likedOnly}
+        followedOnly={followedOnly}
+        subscriptions={subscriptions}
         isLoggedIn={user !== null}
         onRssSourceToggle={handleRssSourceToggle}
         onTagToggle={handleTagToggle}
         onSearchQueryChange={setSearchQuery}
         onSortTypeChange={setSortType}
         onLikedOnlyChange={setLikedOnly}
+        onFollowedOnlyChange={setFollowedOnly}
+        onSubscribe={handleSubscribe}
+        onUnsubscribe={handleUnsubscribe}
         onSearch={fetchInitial}
         onReset={handleReset}
       />

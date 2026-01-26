@@ -72,6 +72,7 @@ export interface FeedSearchParams {
   lastLikedAt?: string;
   sortType?: FeedSortType;
   likedOnly?: boolean;
+  mode?: string;
   size?: number;
 }
 

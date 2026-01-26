@@ -39,8 +39,8 @@ public class FeedController {
             @RequestParam(required = false) Instant lastLikedAt,
             @RequestParam(defaultValue = "PUBLISHED_AT") FeedSortType sortType,
             @RequestParam(defaultValue = "false") Boolean likedOnly,
-            @RequestParam(defaultValue = "20") int size
-    ) {
+            @RequestParam(defaultValue = "ALL") String mode,
+            @RequestParam(defaultValue = "20") int size) {
         // likedOnly=true인 경우 로그인 필수
         if (Boolean.TRUE.equals(likedOnly) && memberId == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
@@ -51,11 +51,16 @@ public class FeedController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
+        boolean followedOnly = "FOLLOWING".equalsIgnoreCase(mode);
+        // FOLLOWING 모드는 로그인 필수
+        if (followedOnly && memberId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
         FeedSearchCriteria criteria = new FeedSearchCriteria(
                 memberId, rssSourceIds, tagIds, query,
                 lastId, lastPublishedAt, lastLikeCount, lastLikedAt,
-                sortType, likedOnly, size
-        );
+                sortType, likedOnly, followedOnly, size);
         FeedEntryPage feedPage = feedQueryService.searchFeeds(criteria);
         return ResponseEntity.ok(FeedPageResponse.from(feedPage));
     }
@@ -64,8 +69,7 @@ public class FeedController {
     public ResponseEntity<FeedEntryResponse> updateTags(
             @AuthenticationPrincipal Long memberId,
             @PathVariable Long id,
-            @RequestBody UpdateFeedTagsRequest request
-    ) {
+            @RequestBody UpdateFeedTagsRequest request) {
         if (memberId == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
@@ -79,8 +83,7 @@ public class FeedController {
     @PostMapping("/{id}/view")
     public ResponseEntity<Void> markAsRead(
             @AuthenticationPrincipal Long memberId,
-            @PathVariable Long id
-    ) {
+            @PathVariable Long id) {
         feedEntryService.markAsRead(id, memberId);
         return ResponseEntity.ok().build();
     }
@@ -91,8 +94,7 @@ public class FeedController {
     @PostMapping("/{id}/like")
     public ResponseEntity<LikeResponse> toggleLike(
             @AuthenticationPrincipal Long memberId,
-            @PathVariable Long id
-    ) {
+            @PathVariable Long id) {
         if (memberId == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }

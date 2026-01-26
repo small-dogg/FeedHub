@@ -9,12 +9,17 @@ interface FilterBarProps {
   searchQuery: string;
   sortType: FeedSortType;
   likedOnly: boolean;
+  followedOnly?: boolean;
+  subscriptions?: number[];
   isLoggedIn: boolean;
   onRssSourceToggle: (id: number) => void;
   onTagToggle: (id: number) => void;
   onSearchQueryChange: (query: string) => void;
   onSortTypeChange: (sortType: FeedSortType) => void;
   onLikedOnlyChange: (likedOnly: boolean) => void;
+  onFollowedOnlyChange?: (followedOnly: boolean) => void;
+  onSubscribe?: (id: number) => void;
+  onUnsubscribe?: (id: number) => void;
   onSearch: () => void;
   onReset: () => void;
 }
@@ -25,12 +30,17 @@ export function FilterBar({
   searchQuery,
   sortType,
   likedOnly,
+  followedOnly = false,
+  subscriptions = [],
   isLoggedIn,
   onRssSourceToggle,
   onTagToggle,
   onSearchQueryChange,
   onSortTypeChange,
   onLikedOnlyChange,
+  onFollowedOnlyChange,
+  onSubscribe,
+  onUnsubscribe,
   onSearch,
   onReset,
 }: FilterBarProps) {
@@ -87,6 +97,21 @@ export function FilterBar({
     }
   };
 
+  const handleFollowedOnlyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (onFollowedOnlyChange) {
+      onFollowedOnlyChange(e.target.checked);
+    }
+  };
+
+  const handleSubscribeToggle = (e: React.MouseEvent, id: number, isSubscribed: boolean) => {
+    e.stopPropagation();
+    if (isSubscribed) {
+      onUnsubscribe?.(id);
+    } else {
+      onSubscribe?.(id);
+    }
+  };
+
   return (
     <div className="filter-bar">
       <div className="filter-section search-section">
@@ -116,33 +141,60 @@ export function FilterBar({
             )}
           </select>
           {isLoggedIn && (
-            <label className="liked-only-label">
-              <input
-                type="checkbox"
-                checked={likedOnly}
-                onChange={handleLikedOnlyChange}
-              />
-              내가 좋아요한 피드만
-            </label>
+            <>
+              <label className="checkbox-label">
+                <input
+                  type="checkbox"
+                  checked={likedOnly}
+                  onChange={handleLikedOnlyChange}
+                />
+                내가 좋아요한 피드만
+              </label>
+              {onFollowedOnlyChange && (
+                <label className="checkbox-label">
+                  <input
+                    type="checkbox"
+                    checked={followedOnly}
+                    onChange={handleFollowedOnlyChange}
+                  />
+                  내 구독 피드만
+                </label>
+              )}
+            </>
           )}
         </div>
       </div>
 
       <div className="filter-section">
-        <h4>RSS 소스</h4>
+        <h4>RSS 소스 (★ 클릭 시 구독/해제)</h4>
         <div className="filter-chips">
           {rssSources.length === 0 ? (
             <span className="filter-empty">등록된 소스가 없습니다</span>
           ) : (
-            rssSources.map((source) => (
-              <button
-                key={source.id}
-                className={`filter-chip ${selectedRssSources.includes(source.id) ? 'active' : ''}`}
-                onClick={() => onRssSourceToggle(source.id)}
-              >
-                {source.blogName}
-              </button>
-            ))
+            rssSources.map((source) => {
+              const isSubscribed = subscriptions.includes(source.id);
+              return (
+                <div
+                  key={source.id}
+                  className={`filter-chip ${selectedRssSources.includes(source.id) ? 'active' : ''}`}
+                  onClick={() => onRssSourceToggle(source.id)}
+                  style={{ display: 'flex', alignItems: 'center', gap: '6px', paddingRight: isLoggedIn ? '8px' : '12px' }}
+                >
+                  <span>{source.blogName}</span>
+                  {isLoggedIn && (
+                    <span
+                      role="button"
+                      className={`btn-subscribe ${isSubscribed ? 'subscribed' : ''}`}
+                      onClick={(e) => handleSubscribeToggle(e, source.id, isSubscribed)}
+                      title={isSubscribed ? '구독 취소' : '구독하기'}
+                      style={{ cursor: 'pointer', color: isSubscribed ? '#fbc02d' : '#ccc', fontSize: '1.1em' }}
+                    >
+                      {isSubscribed ? '★' : '☆'}
+                    </span>
+                  )}
+                </div>
+              );
+            })
           )}
         </div>
       </div>
