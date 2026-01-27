@@ -1,0 +1,21 @@
+spring:
+  application:
+    name: feed-hub-scheduler
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+
+# Scheduler settings
+scheduler:
+  feed-sync:
+    enabled: ${SCHEDULER_FEED_SYNC_ENABLED:true}
+    cron: ${SCHEDULER_FEED_SYNC_CRON:0 2 * * * *}  # Every hour
+  full-crawl:
+    enabled: ${SCHEDULER_FULL_CRAWL_ENABLED:true}
+    cron: ${SCHEDULER_FULL_CRAWL_CRON:0 0 2 * * *}  # Every day at 2 AM
+
+# Logging
+logging:
+  level:
+    root: INFO
+    world.jerry.feedhub.scheduler: INFO
+    org.springframework.kafka: INFO

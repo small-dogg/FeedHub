@@ -1,0 +1,67 @@
+spring:
+  application:
+    name: feed-hub-collector
+  config:
+    import:
+      - aws-parameterstore:/feedhub/
+  cloud:
+    aws:
+      parameterstore:
+        enabled: true
+        region: ${AWS_REGION:ap-northeast-2}
+      credentials:
+        instanceProfile: true
+      region:
+        static: ${AWS_REGION:ap-northeast-2}
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/feed_hub}
+    username: ${postgresql.username}
+    password: ${postgresql.password}
+    driver-class-name: org.postgresql.Driver
+  flyway:
+    enabled: false
+  jpa:
+    hibernate:
+      ddl-auto: none
+    open-in-view: false
+    properties:
+      hibernate:
+        default_batch_fetch_size: 100
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: false
+        show_sql: false
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    consumer:
+      group-id: feed-hub-collector-group
+      auto-offset-reset: earliest
+      enable-auto-commit: false
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: world.jerry.feedhub.common.command,world.jerry.feedhub.collector.message
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      acks: all
+      retries: 3
+      properties:
+        enable.idempotence: true
+    listener:
+      ack-mode: manual_immediate
+      concurrency: ${KAFKA_LISTENER_CONCURRENCY:3}
+
+collector:
+  max-pages-per-crawl: ${COLLECTOR_MAX_PAGES:1000}
+  request-delay-ms: ${COLLECTOR_REQUEST_DELAY:1000}
+  connection-timeout-ms: ${COLLECTOR_CONNECTION_TIMEOUT:10000}
+  read-timeout-ms: ${COLLECTOR_READ_TIMEOUT:30000}
+
+# Logging
+logging:
+  level:
+    root: INFO
+    world.jerry.feedhub.collector: INFO
+    org.springframework.kafka: INFO
+    org.hibernate.SQL: WARN
+    org.hibernate.type.descriptor.sql.BasicBinder: WARN

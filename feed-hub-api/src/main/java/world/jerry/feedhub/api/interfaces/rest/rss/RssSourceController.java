@@ -16,7 +16,6 @@ import world.jerry.feedhub.api.application.rss.OpmlImportService;
 import world.jerry.feedhub.api.application.rss.RssInfoService;
 import world.jerry.feedhub.api.application.rss.dto.OpmlImportResult;
 import world.jerry.feedhub.api.application.rss.dto.RssInfoDetail;
-import world.jerry.feedhub.common.domain.BlogType;
 import world.jerry.feedhub.common.domain.CrawlMode;
 import world.jerry.feedhub.api.interfaces.rest.rss.dto.AsyncCommandResponse;
 import world.jerry.feedhub.api.interfaces.rest.rss.dto.CrawlResponse;

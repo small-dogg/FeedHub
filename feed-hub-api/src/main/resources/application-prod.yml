@@ -1,0 +1,60 @@
+spring:
+  application:
+    name: feed-hub-api
+  config:
+    import:
+      - aws-parameterstore:/feedhub/
+  cloud:
+    aws:
+      parameterstore:
+        enabled: true
+        region: ${AWS_REGION:ap-northeast-2}
+      credentials:
+        instanceProfile: true
+      region:
+        static: ${AWS_REGION:ap-northeast-2}
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/feed_hub}
+    driver-class-name: org.postgresql.Driver
+    username: ${postgresql.username}
+    password: ${postgresql.password}
+  jpa:
+    hibernate:
+      ddl-auto: none
+    open-in-view: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: false
+        show_sql: false
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      acks: all
+      retries: 3
+      properties:
+        enable.idempotence: true
+
+server:
+  port: ${SERVER_PORT:8080}
+
+# JWT Configuration
+jwt:
+  secret: ${jwt.key}
+  expiration-ms: 86400000  # 24 hours
+
+# Flyway
+flyway:
+  enabled: true
+  baseline-on-migrate: true
+
+# Logging
+logging:
+  level:
+    root: INFO
+    world.jerry.feedhub: INFO
+    org.springframework.web: INFO
+    org.hibernate.SQL: WARN
+    org.hibernate.type.descriptor.sql.BasicBinder: WARN
