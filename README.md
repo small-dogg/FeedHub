@@ -15,12 +15,19 @@ https://github.com/user-attachments/assets/a14614f1-ec28-42b9-a8ef-84e338691ddb
 
 ```
 FeedHub/
-├── feed-hub-api/        # Spring Boot 백엔드 API
-├── feed-hub-crawler/    # 크롤러 모듈 (Kafka Consumer, 블로그 크롤링)
+├── feed-hub-common/     # 공통 모듈 (도메인, Command/Event)
+├── feed-hub-api/        # Spring Boot REST API 서버
+├── feed-hub-collector/  # RSS 수집 및 블로그 크롤링 (Kafka Consumer)
+├── feed-hub-scheduler/  # 스케줄러 (정기 동기화)
 └── feed-hub-ui/         # React 프론트엔드
 ```
 
 ## 기술 스택
+
+### Common (feed-hub-common)
+- Java 21
+- Spring Boot 4.0.1
+- 공유 도메인 모델 및 Kafka 메시지 정의
 
 ### Backend (feed-hub-api)
 - Java 21
@@ -30,14 +37,26 @@ FeedHub/
 - QueryDSL 5.1.0
 - PostgreSQL
 - Flyway (DB 마이그레이션)
-- Apache Kafka
+- Apache Kafka (Producer)
+- Spring Cloud AWS (Parameter Store)
 - Lombok
 
-### Crawler (feed-hub-crawler)
+### Collector (feed-hub-collector)
 - Java 21
 - Spring Boot 4.0.1
-- Spring Kafka
+- Spring Kafka (Consumer/Producer)
+- Spring Data JPA
+- Rome RSS Parser
 - Jsoup (HTML 파싱)
+- OkHttp3
+- Resilience4j (Circuit Breaker)
+- Spring Cloud AWS (Parameter Store)
+
+### Scheduler (feed-hub-scheduler)
+- Java 21
+- Spring Boot 4.0.1
+- Spring Kafka (Producer)
+- Spring Scheduling
 
 ### Frontend (feed-hub-ui)
 - React 19 + TypeScript
@@ -107,6 +126,17 @@ FeedHub/
 - Kafka 기반 비동기 크롤링
 - 블로그 타입별 전용 크롤러 (Tistory, Velog, Medium, GitHub Blog)
 - Rate limiting 및 재시도 로직
+- 크롤링 이력 관리 (sync_history)
+
+### 11. 구독 기능
+- 사용자별 RSS 소스 구독 관리
+- 구독한 소스의 피드만 조회 가능
+- 개인화된 피드 제공
+
+### 12. 스케줄러
+- 정기적인 RSS 동기화 (매 시간)
+- 전체 크롤링 (매일 새벽 2시)
+- Kafka 기반 비동기 작업 분산
 
 ## API 엔드포인트
 
@@ -166,6 +196,9 @@ member (id, email, password, nickname, role, created_at, updated_at)
 -- RSS 소스 정보
 rss_info (id, blog_name, author, rss_url, site_url, crawl_url, language, blog_type, created_at, last_sync_at)
 
+-- 구독 (사용자별 RSS 소스 구독)
+subscription (id, member_id, rss_info_id, subscribed_at)
+
 -- 태그 (사용자별)
 tag (id, member_id, name, created_at)
 
@@ -184,6 +217,9 @@ member_feed_read (id, member_id, feed_entry_id, read_at)
 -- 피드 좋아요
 feed_like (id, member_id, feed_entry_id, created_at)
 
+-- 동기화 이력
+sync_history (id, rss_info_id, sync_type, status, started_at, completed_at, error_message, feed_count)
+
 -- QnA
 qna (id, member_id, type, title, content, is_secret, status, created_at, updated_at)
 
@@ -199,7 +235,9 @@ qna_answer (id, qna_id, member_id, content, created_at)
 - PostgreSQL
 - Apache Kafka
 
-### Backend 실행
+### 로컬 개발 환경
+
+#### Backend API 실행
 
 ```bash
 # 프로젝트 빌드
@@ -211,14 +249,51 @@ qna_answer (id, qna_id, member_id, content, created_at)
 
 > **Note**: `application.yml`에서 데이터베이스 연결 정보와 JWT 시크릿 키를 설정하세요.
 
-### Crawler 실행
+#### Collector 실행
 
 ```bash
-# 크롤러 빌드
-./gradlew :feed-hub-crawler:build
+# 빌드
+./gradlew :feed-hub-collector:build
 
-# 크롤러 실행
-./gradlew :feed-hub-crawler:bootRun
+# 실행
+./gradlew :feed-hub-collector:bootRun
+```
+
+#### Scheduler 실행
+
+```bash
+# 빌드
+./gradlew :feed-hub-scheduler:build
+
+# 실행
+./gradlew :feed-hub-scheduler:bootRun
+```
+
+### 운영 환경 배포
+
+#### AWS Parameter Store 설정
+다음 파라미터를 AWS Parameter Store에 등록:
+- `/feedhub/postgresql/username`: PostgreSQL 사용자명
+- `/feedhub/postgresql/password`: PostgreSQL 비밀번호
+- `/feedhub/jwt/key`: JWT Secret Key
+
+#### 환경변수 설정
+```bash
+export AWS_REGION=ap-northeast-2
+export DB_URL=jdbc:postgresql://your-db:5432/feed_hub
+export KAFKA_BOOTSTRAP_SERVERS=your-kafka:9092
+```
+
+#### 실행
+```bash
+# API 서버
+java -jar feed-hub-api.jar --spring.profiles.active=prod
+
+# Collector
+java -jar feed-hub-collector.jar --spring.profiles.active=prod
+
+# Scheduler
+java -jar feed-hub-scheduler.jar --spring.profiles.active=prod
 ```
 
 ### Frontend 실행
@@ -290,20 +365,37 @@ feed-hub-api/src/main/java/world/jerry/feedhub/api/
     └── common/               # 공통 (GlobalExceptionHandler)
 ```
 
-## 크롤러 구조
+## Collector 구조
 
 ```
-feed-hub-crawler/src/main/java/world/jerry/feedhub/crawler/
-├── message/                   # Kafka 메시지 DTO
-├── consumer/                  # Kafka Consumer
+feed-hub-collector/src/main/java/world/jerry/feedhub/collector/
+├── domain/                    # 도메인 모델
+├── application/               # 서비스 레이어
+├── infrastructure/            # Kafka Consumer, JPA 리포지토리
 ├── crawler/                   # 블로그 타입별 크롤러
 │   ├── BlogCrawler.java      # 크롤러 인터페이스
 │   ├── TistoryCrawler.java   # 티스토리 크롤러
 │   ├── VelogCrawler.java     # Velog 크롤러
 │   ├── MediumCrawler.java    # Medium 크롤러
 │   └── GithubBlogCrawler.java # GitHub Blog 크롤러
+└── config/                    # 설정
+```
+
+## Scheduler 구조
+
+```
+feed-hub-scheduler/src/main/java/world/jerry/feedhub/scheduler/
+├── scheduler/                 # 스케줄러
+│   └── FeedSyncScheduler.java # RSS 동기화/크롤링 스케줄러
 └── config/                    # Kafka 설정
 ```
+
+## 아키텍처
+
+### EDA (Event-Driven Architecture) 기반 MSA
+- Kafka를 통한 모듈 간 느슨한 결합
+- Command/Event 패턴으로 비동기 처리
+- Fan-out 구조로 확장 가능한 크롤링
 
 ## 라이선스
 
