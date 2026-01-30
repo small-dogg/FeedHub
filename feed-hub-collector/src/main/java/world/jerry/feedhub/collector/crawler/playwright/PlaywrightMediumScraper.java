@@ -8,6 +8,7 @@ import world.jerry.feedhub.collector.domain.CrawledArticle;
 
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.YearMonth;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
@@ -33,9 +34,9 @@ public class PlaywrightMediumScraper {
     private static final int SELECTOR_WAIT_TIMEOUT_MS = 10000;
     private static final int DESCRIPTION_MAX_LENGTH = 500;
 
-    // Infinite scroll settings
+    // Pagination settings
     private static final int DEFAULT_MAX_ARTICLES = 50;
-    private static final int SCROLL_WAIT_MS = 1500;
+    private static final int SCROLL_WAIT_MS = 2000;
     private static final int MAX_SCROLL_ATTEMPTS = 20;
 
     // User agent to mimic real browser
@@ -116,8 +117,7 @@ public class PlaywrightMediumScraper {
     /**
      * Scrape article list from Medium blog/publication page with infinite scroll support
      * - Extracts article cards with title, summary, author, date, link
-     * - Handles Medium's virtualized scrolling (DOM elements are recycled)
-     * - Scrolls to load more articles until maxArticles reached or no more content
+     * - Handles Medium's virtualized scrolling by collecting articles incrementally
      *
      * @param listPageUrl URL of the list page (e.g., blog.medium.com, medium.com/@user)
      * @param maxArticles Maximum number of articles to collect
@@ -133,7 +133,6 @@ public class PlaywrightMediumScraper {
 
         Page page = context.newPage();
         List<CrawledArticle> articles = new ArrayList<>();
-        // Track collected links to avoid duplicates (important for virtualized scroll)
         java.util.Set<String> collectedLinks = new java.util.HashSet<>();
 
         try {
@@ -151,40 +150,53 @@ public class PlaywrightMediumScraper {
             // Wait for initial content to render
             page.waitForTimeout(2000);
 
-            // Medium uses virtualized scrolling - DOM elements are recycled as you scroll
-            // Strategy: parse ALL visible articles at each scroll position, track by link
+            // First, collect initial visible articles
+            Locator articleCards = page.locator("article");
+            int visibleCount = articleCards.count();
+            log.debug("Initial load: {} visible cards", visibleCount);
+
+            for (int i = 0; i < visibleCount && articles.size() < maxArticles; i++) {
+                try {
+                    Locator card = articleCards.nth(i);
+                    CrawledArticle article = parseArticleCard(card, listPageUrl);
+
+                    if (article != null && article.title() != null && !article.title().isEmpty()) {
+                        String link = article.link();
+                        if (link != null && !collectedLinks.contains(link)) {
+                            collectedLinks.add(link);
+                            articles.add(article);
+                            log.debug("Collected article {}: {}", articles.size(), truncateForLog(article.title(), 40));
+                        }
+                    }
+                } catch (Exception e) {
+                    log.trace("Failed to parse card {}: {}", i, e.getMessage());
+                }
+            }
+
+            // Scroll to load more articles
+            // Medium resets DOM ~2 seconds after scroll, so we scroll and collect immediately
             int scrollAttempts = 0;
             int noNewArticlesCount = 0;
+            int lastScrollTarget = visibleCount - 1;
 
             while (articles.size() < maxArticles && scrollAttempts < MAX_SCROLL_ATTEMPTS) {
                 int previousSize = articles.size();
 
-                // Parse ALL currently visible article cards
-                Locator articleCards = page.locator("article");
-                int visibleCount = articleCards.count();
+                // Scroll to the next batch and immediately collect
+                int scrollTarget = lastScrollTarget + 5; // Scroll 5 articles at a time
+                List<CrawledArticle> newArticles = scrollAndCollect(page, listPageUrl, collectedLinks, scrollTarget);
 
-                log.debug("Scroll {}: {} visible cards, {} collected so far",
-                        scrollAttempts + 1, visibleCount, articles.size());
-
-                // Parse each visible card
-                for (int i = 0; i < visibleCount && articles.size() < maxArticles; i++) {
-                    try {
-                        Locator card = articleCards.nth(i);
-                        CrawledArticle article = parseArticleCard(card, listPageUrl);
-
-                        if (article != null && article.title() != null && !article.title().isEmpty()) {
-                            // Use link as unique identifier
-                            String link = article.link();
-                            if (link != null && !collectedLinks.contains(link)) {
-                                collectedLinks.add(link);
-                                articles.add(article);
-                                log.debug("Collected article {}: {}", articles.size(), truncateForLog(article.title(), 40));
-                            }
-                        }
-                    } catch (Exception e) {
-                        log.trace("Failed to parse card {}: {}", i, e.getMessage());
-                    }
+                for (CrawledArticle article : newArticles) {
+                    if (articles.size() >= maxArticles) break;
+                    articles.add(article);
+                    log.debug("Collected article {}: {}", articles.size(), truncateForLog(article.title(), 40));
                 }
+
+                lastScrollTarget = scrollTarget;
+                scrollAttempts++;
+
+                log.debug("Scroll {}: collected {} new articles (total: {})",
+                        scrollAttempts, newArticles.size(), articles.size());
 
                 // Check if we've collected enough
                 if (articles.size() >= maxArticles) {
@@ -192,22 +204,18 @@ public class PlaywrightMediumScraper {
                     break;
                 }
 
-                // Check if we found new articles this scroll
+                // Check if we found new articles
                 if (articles.size() == previousSize) {
                     noNewArticlesCount++;
-                    if (noNewArticlesCount >= 5) {
-                        log.info("No new articles after {} attempts, likely reached end", noNewArticlesCount);
+                    if (noNewArticlesCount >= 3) {
+                        log.info("No new articles after {} scroll attempts, stopping", noNewArticlesCount);
                         break;
                     }
                 } else {
                     noNewArticlesCount = 0;
                 }
 
-                // Scroll down to load more content
-                scrollToLoadMore(page);
-                scrollAttempts++;
-
-                // Wait for DOM to update
+                // Wait before next scroll attempt (page might need time to stabilize)
                 page.waitForTimeout(SCROLL_WAIT_MS);
             }
 
@@ -225,24 +233,168 @@ public class PlaywrightMediumScraper {
     }
 
     /**
-     * Scroll down to trigger infinite scroll loading
-     * - Uses smooth incremental scrolling to better trigger lazy loading
-     * - Scrolls to the last article element to ensure content loads
+     * Scroll to load more articles and immediately collect them
+     * - Medium resets DOM ~2 seconds after scroll, so we must collect immediately
+     * - Scrolls to end of page to trigger infinite scroll loading
+     * - Returns list of new articles found after scroll
      */
-    private void scrollToLoadMore(Page page) {
-        // First, try scrolling to the last article element
+    private List<CrawledArticle> scrollAndCollect(Page page, String baseUrl,
+            java.util.Set<String> collectedLinks, int targetIndex) {
+        List<CrawledArticle> newArticles = new ArrayList<>();
+
+        // Scroll to the end of current content to trigger infinite scroll
         page.evaluate("""
             (function() {
+                // Scroll to the last article
                 const articles = document.querySelectorAll('article');
                 if (articles.length > 0) {
                     const lastArticle = articles[articles.length - 1];
-                    lastArticle.scrollIntoView({ behavior: 'smooth', block: 'end' });
-                } else {
-                    // Fallback: scroll down by viewport height
-                    window.scrollBy(0, window.innerHeight);
+                    lastArticle.scrollIntoView({ behavior: 'instant', block: 'end' });
                 }
+                // Also scroll a bit more past the last article
+                window.scrollBy(0, 200);
             })()
             """);
+
+        // Wait a bit for new content to load (but not too long before DOM resets)
+        page.waitForTimeout(800);
+
+        // Immediately collect all visible articles
+        Locator articleCards = page.locator("article");
+        int visibleCount = articleCards.count();
+
+        for (int i = 0; i < visibleCount; i++) {
+            try {
+                Locator card = articleCards.nth(i);
+                CrawledArticle article = parseArticleCard(card, baseUrl);
+
+                if (article != null && article.title() != null && !article.title().isEmpty()) {
+                    String link = article.link();
+                    if (link != null && !collectedLinks.contains(link)) {
+                        collectedLinks.add(link);
+                        newArticles.add(article);
+                    }
+                }
+            } catch (Exception e) {
+                log.trace("Failed to parse card during scroll: {}", e.getMessage());
+            }
+        }
+
+        return newArticles;
+    }
+
+    /**
+     * Scrape articles using Archive-based pagination
+     * - Medium archive pages: /publication/archive/YYYY/MM
+     * - More reliable than infinite scroll (which Medium blocks)
+     * - Iterates through monthly archive pages
+     *
+     * @param publicationUrl Base publication URL (e.g., https://medium.com/daangn)
+     * @param monthsBack Number of months to go back from current month
+     * @param maxArticles Maximum total articles to collect
+     * @return List of crawled articles
+     */
+    public List<CrawledArticle> scrapeWithArchivePagination(String publicationUrl, int monthsBack, int maxArticles) {
+        log.info("Scraping with archive pagination: {} (months: {}, max: {})", publicationUrl, monthsBack, maxArticles);
+
+        List<CrawledArticle> allArticles = new ArrayList<>();
+        java.util.Set<String> collectedLinks = new java.util.HashSet<>();
+
+        // Extract publication name from URL
+        String baseUrl = publicationUrl.replaceAll("/all$", "").replaceAll("/$", "");
+
+        YearMonth currentMonth = YearMonth.now();
+
+        for (int i = 0; i <= monthsBack && allArticles.size() < maxArticles; i++) {
+            YearMonth targetMonth = currentMonth.minusMonths(i);
+            String archiveUrl = String.format("%s/archive/%d/%02d",
+                    baseUrl, targetMonth.getYear(), targetMonth.getMonthValue());
+
+            log.debug("Fetching archive page: {}", archiveUrl);
+
+            try {
+                List<CrawledArticle> monthArticles = scrapeArchivePage(archiveUrl, collectedLinks);
+
+                for (CrawledArticle article : monthArticles) {
+                    if (allArticles.size() >= maxArticles) break;
+                    if (article.link() != null && !collectedLinks.contains(article.link())) {
+                        collectedLinks.add(article.link());
+                        allArticles.add(article);
+                    }
+                }
+
+                log.debug("Archive {}: found {} articles (total: {})",
+                        archiveUrl, monthArticles.size(), allArticles.size());
+
+                // Rate limiting between archive pages
+                if (i < monthsBack) {
+                    Thread.sleep(1000 + (long) (Math.random() * 1000));
+                }
+
+            } catch (Exception e) {
+                log.warn("Failed to fetch archive {}: {}", archiveUrl, e.getMessage());
+                // Continue with next month
+            }
+        }
+
+        log.info("Archive pagination complete: {} articles from {} months", allArticles.size(), monthsBack + 1);
+        return allArticles;
+    }
+
+    /**
+     * Scrape a single archive page
+     */
+    private List<CrawledArticle> scrapeArchivePage(String archiveUrl, java.util.Set<String> existingLinks) {
+        List<CrawledArticle> articles = new ArrayList<>();
+
+        BrowserContext context = browser.newContext(new Browser.NewContextOptions()
+                .setUserAgent(USER_AGENT)
+                .setViewportSize(1920, 1080)
+        );
+
+        Page page = context.newPage();
+
+        try {
+            Response response = page.navigate(archiveUrl, new Page.NavigateOptions()
+                    .setTimeout(PAGE_LOAD_TIMEOUT_MS)
+                    .setWaitUntil(WaitUntilState.DOMCONTENTLOADED)
+            );
+
+            if (response == null || !response.ok()) {
+                log.debug("Archive page not found or error: {} (HTTP {})",
+                        archiveUrl, response != null ? response.status() : 0);
+                return articles;
+            }
+
+            // Wait for content
+            page.waitForTimeout(2000);
+
+            // Parse all visible articles (no scrolling - archive pages show all)
+            Locator articleCards = page.locator("article");
+            int cardCount = articleCards.count();
+
+            for (int i = 0; i < cardCount; i++) {
+                try {
+                    Locator card = articleCards.nth(i);
+                    CrawledArticle article = parseArticleCard(card, archiveUrl);
+
+                    if (article != null && article.title() != null && !article.title().isEmpty()) {
+                        String link = article.link();
+                        if (link != null && !existingLinks.contains(link)) {
+                            articles.add(article);
+                        }
+                    }
+                } catch (Exception e) {
+                    log.trace("Failed to parse card {}: {}", i, e.getMessage());
+                }
+            }
+
+        } finally {
+            page.close();
+            context.close();
+        }
+
+        return articles;
     }
 
 
