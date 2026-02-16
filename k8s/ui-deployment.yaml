@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: feed-hub-ui
+  namespace: feedhub
+  labels:
+    app: feed-hub-ui
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: feed-hub-ui
+  template:
+    metadata:
+      labels:
+        app: feed-hub-ui
+    spec:
+      containers:
+        - name: feed-hub-ui
+          image: feed-hub-ui:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 12002
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: feed-hub-ui
+  namespace: feedhub
+spec:
+  selector:
+    app: feed-hub-ui
+  ports:
+    - port: 12002
+      targetPort: 12002
+  type: ClusterIP

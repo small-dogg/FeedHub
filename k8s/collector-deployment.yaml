@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: feed-hub-collector
+  namespace: feedhub
+  labels:
+    app: feed-hub-collector
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: feed-hub-collector
+  template:
+    metadata:
+      labels:
+        app: feed-hub-collector
+    spec:
+      containers:
+        - name: feed-hub-collector
+          image: feed-hub-collector:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 12004
+          env:
+            - name: SERVER_PORT
+              value: "12004"
+            - name: SPRING_DATASOURCE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: feedhub-config
+                  key: DB_URL
+            - name: SPRING_DATASOURCE_USERNAME
+              valueFrom:
+                configMapKeyRef:
+                  name: feedhub-config
+                  key: DB_USERNAME
+            - name: SPRING_DATASOURCE_PASSWORD
+              value: "test"
+            - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
+              valueFrom:
+                configMapKeyRef:
+                  name: feedhub-config
+                  key: KAFKA_BOOTSTRAP_SERVERS
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: feed-hub-collector
+  namespace: feedhub
+spec:
+  selector:
+    app: feed-hub-collector
+  ports:
+    - port: 12004
+      targetPort: 12004
+  type: ClusterIP

@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: feedhub-config
+  namespace: feedhub
+data:
+  # Database
+  DB_URL: "jdbc:postgresql://dev-postgres.database-main.svc.cluster.local:5432/feed_hub"
+  DB_USERNAME: "test"
+  DB_DRIVER: "org.postgresql.Driver"
+
+  # Kafka
+  KAFKA_BOOTSTRAP_SERVERS: "main-kafka.kafka-main.svc.cluster.local:9092"
+
+  # JWT
+  JWT_EXPIRATION_MS: "86400000"

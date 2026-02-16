@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: feed-hub-scheduler
+  namespace: feedhub
+  labels:
+    app: feed-hub-scheduler
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: feed-hub-scheduler
+  template:
+    metadata:
+      labels:
+        app: feed-hub-scheduler
+    spec:
+      containers:
+        - name: feed-hub-scheduler
+          image: feed-hub-scheduler:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 12003
+          env:
+            - name: SERVER_PORT
+              value: "12003"
+            - name: SPRING_KAFKA_BOOTSTRAP_SERVERS
+              valueFrom:
+                configMapKeyRef:
+                  name: feedhub-config
+                  key: KAFKA_BOOTSTRAP_SERVERS
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: feed-hub-scheduler
+  namespace: feedhub
+spec:
+  selector:
+    app: feed-hub-scheduler
+  ports:
+    - port: 12003
+      targetPort: 12003
+  type: ClusterIP
