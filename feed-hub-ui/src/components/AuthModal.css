@@ -131,6 +131,28 @@
   color: #4caf50;
 }
 
+.auth-options {
+  display: flex;
+  gap: 16px;
+}
+
+.auth-option-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.9rem;
+  color: #555;
+  cursor: pointer;
+  user-select: none;
+}
+
+.auth-option-label input[type='checkbox'] {
+  cursor: pointer;
+  accent-color: #1976d2;
+  width: 16px;
+  height: 16px;
+}
+
 .auth-error {
   padding: 12px;
   background: #ffebee;

@@ -1,12 +1,12 @@
-import { useState } from 'react';
-import { authApi } from '../api/client';
+import { useState, useEffect } from 'react';
+import { authApi, emailManager } from '../api/client';
 import type { User } from '../types';
 import './AuthModal.css';
 
 interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onAuthSuccess: (user: User, token: string) => void;
+  onAuthSuccess: (user: User, token: string, autoLogin: boolean) => void;
 }
 
 type AuthMode = 'signin' | 'signup';
@@ -21,6 +21,19 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalProps) {
   const [loading, setLoading] = useState(false);
   const [emailChecked, setEmailChecked] = useState(false);
   const [emailAvailable, setEmailAvailable] = useState(false);
+  const [saveEmail, setSaveEmail] = useState(false);
+  const [autoLogin, setAutoLogin] = useState(false);
+
+  // Load saved email when modal opens in signin mode
+  useEffect(() => {
+    if (isOpen && mode === 'signin') {
+      const saved = emailManager.getSavedEmail();
+      if (saved) {
+        setEmail(saved);
+        setSaveEmail(true);
+      }
+    }
+  }, [isOpen, mode]);
 
   const resetForm = () => {
     setEmail('');
@@ -30,6 +43,8 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalProps) {
     setError('');
     setEmailChecked(false);
     setEmailAvailable(false);
+    setSaveEmail(false);
+    setAutoLogin(false);
   };
 
   const handleModeChange = (newMode: AuthMode) => {
@@ -90,11 +105,16 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalProps) {
           passwordConfirm,
           nickname,
         });
-        onAuthSuccess(response.user, response.accessToken);
+        onAuthSuccess(response.user, response.accessToken, true);
         handleClose();
       } else {
         const response = await authApi.signIn({ email, password });
-        onAuthSuccess(response.user, response.accessToken);
+        if (saveEmail) {
+          emailManager.saveEmail(email);
+        } else {
+          emailManager.removeEmail();
+        }
+        onAuthSuccess(response.user, response.accessToken, autoLogin);
         handleClose();
       }
     } catch (err: unknown) {
@@ -178,6 +198,27 @@ export function AuthModal({ isOpen, onClose, onAuthSuccess }: AuthModalProps) {
               required
             />
           </div>
+
+          {mode === 'signin' && (
+            <div className="auth-options">
+              <label className="auth-option-label">
+                <input
+                  type="checkbox"
+                  checked={saveEmail}
+                  onChange={(e) => setSaveEmail(e.target.checked)}
+                />
+                아이디 저장
+              </label>
+              <label className="auth-option-label">
+                <input
+                  type="checkbox"
+                  checked={autoLogin}
+                  onChange={(e) => setAutoLogin(e.target.checked)}
+                />
+                자동 로그인
+              </label>
+            </div>
+          )}
 
           {mode === 'signup' && (
             <>

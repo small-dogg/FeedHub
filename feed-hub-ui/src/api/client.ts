@@ -23,6 +23,7 @@ import type {
 
 const API_BASE = '/api/v1';
 const TOKEN_KEY = 'feedhub_access_token';
+const SAVED_EMAIL_KEY = 'feedhub_saved_email';
 
 const api = axios.create({
   baseURL: API_BASE,
@@ -33,9 +34,30 @@ const api = axios.create({
 
 // Token management
 export const tokenManager = {
-  getToken: (): string | null => localStorage.getItem(TOKEN_KEY),
-  setToken: (token: string): void => localStorage.setItem(TOKEN_KEY, token),
-  removeToken: (): void => localStorage.removeItem(TOKEN_KEY),
+  // Check localStorage first, then sessionStorage
+  getToken: (): string | null =>
+    localStorage.getItem(TOKEN_KEY) ?? sessionStorage.getItem(TOKEN_KEY),
+  // persistent=true → localStorage (auto-login), false → sessionStorage (session only)
+  setToken: (token: string, persistent: boolean): void => {
+    if (persistent) {
+      localStorage.setItem(TOKEN_KEY, token);
+      sessionStorage.removeItem(TOKEN_KEY);
+    } else {
+      sessionStorage.setItem(TOKEN_KEY, token);
+      localStorage.removeItem(TOKEN_KEY);
+    }
+  },
+  removeToken: (): void => {
+    localStorage.removeItem(TOKEN_KEY);
+    sessionStorage.removeItem(TOKEN_KEY);
+  },
+};
+
+// Email save/restore management
+export const emailManager = {
+  getSavedEmail: (): string | null => localStorage.getItem(SAVED_EMAIL_KEY),
+  saveEmail: (email: string): void => localStorage.setItem(SAVED_EMAIL_KEY, email),
+  removeEmail: (): void => localStorage.removeItem(SAVED_EMAIL_KEY),
 };
 
 // Add auth header interceptor

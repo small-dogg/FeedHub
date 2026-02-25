@@ -23,8 +23,8 @@ function App() {
     }
   }, []);
 
-  const handleAuthSuccess = (userData: User, token: string) => {
-    tokenManager.setToken(token);
+  const handleAuthSuccess = (userData: User, token: string, autoLogin: boolean) => {
+    tokenManager.setToken(token, autoLogin);
     setUser(userData);
     setIsAuthModalOpen(false);
   };
