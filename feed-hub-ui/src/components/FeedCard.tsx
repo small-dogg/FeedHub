@@ -29,6 +29,7 @@ function formatDate(dateString: string | null): string {
 export function FeedCard({ feed, onAddTag, onTagClick, onMarkAsRead, onLikeToggle, onLoginRequired, isLoggedIn }: FeedCardProps) {
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [isLiking, setIsLiking] = useState(false);
+  const [copyStatus, setCopyStatus] = useState<'idle' | 'copied'>('idle');
   // 이번 세션에서 API를 호출했는지 추적 (중복 호출 방지)
   const hasCalledApiRef = useRef(false);
 
@@ -53,6 +54,26 @@ export function FeedCard({ feed, onAddTag, onTagClick, onMarkAsRead, onLikeToggl
 
   const handleViewClick = () => {
     markAsReadOnce();
+  };
+
+  const handleCopyUrl = async () => {
+    try {
+      await navigator.clipboard.writeText(feed.link);
+      setCopyStatus('copied');
+      setTimeout(() => setCopyStatus('idle'), 1500);
+    } catch {
+      // Fallback for older browsers
+      const textarea = document.createElement('textarea');
+      textarea.value = feed.link;
+      textarea.style.position = 'fixed';
+      textarea.style.opacity = '0';
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textarea);
+      setCopyStatus('copied');
+      setTimeout(() => setCopyStatus('idle'), 1500);
+    }
   };
 
   const handleLikeClick = async () => {
@@ -129,6 +150,13 @@ export function FeedCard({ feed, onAddTag, onTagClick, onMarkAsRead, onLikeToggl
             onClick={() => onAddTag?.(feed.id)}
           >
             태그추가
+          </button>
+          <button
+            type="button"
+            className={`btn-copy-url ${copyStatus === 'copied' ? 'copied' : ''}`}
+            onClick={handleCopyUrl}
+          >
+            {copyStatus === 'copied' ? '복사됨!' : 'URL 복사'}
           </button>
           <button
             type="button"
