@@ -1,0 +1,71 @@
+.scrap-toolbar {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 20px;
+  background: #1a1a2e;
+  color: #fff;
+  border-radius: 32px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  z-index: 1000;
+  animation: slideUp 0.2s ease;
+  white-space: nowrap;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+.scrap-toolbar-count {
+  font-size: 0.9rem;
+  color: #ccc;
+}
+
+.scrap-toolbar-message {
+  font-size: 0.9rem;
+  color: #81c784;
+}
+
+.btn-scrap {
+  padding: 6px 16px;
+  background: #1976d2;
+  color: #fff;
+  border: none;
+  border-radius: 20px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.btn-scrap:hover {
+  background: #1565c0;
+}
+
+.btn-clear-selection {
+  padding: 6px 14px;
+  background: transparent;
+  color: #aaa;
+  border: 1px solid #555;
+  border-radius: 20px;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-clear-selection:hover {
+  background: #333;
+  color: #fff;
+  border-color: #777;
+}

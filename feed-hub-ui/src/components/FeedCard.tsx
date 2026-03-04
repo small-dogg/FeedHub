@@ -12,6 +12,8 @@ interface FeedCardProps {
   onLikeToggle?: (feedId: number, liked: boolean, likeCount: number) => void;
   onLoginRequired?: () => void;
   isLoggedIn?: boolean;
+  isSelected?: boolean;
+  onSelect?: (feedId: number) => void;
 }
 
 function formatDate(dateString: string | null): string {
@@ -26,7 +28,7 @@ function formatDate(dateString: string | null): string {
   });
 }
 
-export function FeedCard({ feed, onAddTag, onTagClick, onMarkAsRead, onLikeToggle, onLoginRequired, isLoggedIn }: FeedCardProps) {
+export function FeedCard({ feed, onAddTag, onTagClick, onMarkAsRead, onLikeToggle, onLoginRequired, isLoggedIn, isSelected, onSelect }: FeedCardProps) {
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [isLiking, setIsLiking] = useState(false);
   const [copyStatus, setCopyStatus] = useState<'idle' | 'copied'>('idle');
@@ -95,7 +97,17 @@ export function FeedCard({ feed, onAddTag, onTagClick, onMarkAsRead, onLikeToggl
   };
 
   return (
-    <div className="feed-card-wrapper">
+    <div className={`feed-card-wrapper${isSelected ? ' selected' : ''}`}>
+      <div className="feed-checkbox-col">
+        <input
+          type="checkbox"
+          className="feed-checkbox"
+          checked={isSelected ?? false}
+          onChange={() => onSelect?.(feed.id)}
+          onClick={(e) => e.stopPropagation()}
+          aria-label="Select feed"
+        />
+      </div>
       <div className="feed-card">
       <div className="feed-card-header">
         {feed.rssSource.siteUrl ? (

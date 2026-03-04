@@ -11,9 +11,11 @@ interface FeedListProps {
   onLikeToggle?: (feedId: number, liked: boolean, likeCount: number) => void;
   onLoginRequired?: () => void;
   isLoggedIn?: boolean;
+  selectedIds?: Set<number>;
+  onSelect?: (feedId: number) => void;
 }
 
-export function FeedList({ feeds, loading, onAddTag, onTagClick, onMarkAsRead, onLikeToggle, onLoginRequired, isLoggedIn }: FeedListProps) {
+export function FeedList({ feeds, loading, onAddTag, onTagClick, onMarkAsRead, onLikeToggle, onLoginRequired, isLoggedIn, selectedIds, onSelect }: FeedListProps) {
   if (loading) {
     return (
       <div className="feed-list-loading">
@@ -43,6 +45,8 @@ export function FeedList({ feeds, loading, onAddTag, onTagClick, onMarkAsRead, o
           onLikeToggle={onLikeToggle}
           onLoginRequired={onLoginRequired}
           isLoggedIn={isLoggedIn}
+          isSelected={selectedIds?.has(feed.id) ?? false}
+          onSelect={onSelect}
         />
       ))}
     </div>

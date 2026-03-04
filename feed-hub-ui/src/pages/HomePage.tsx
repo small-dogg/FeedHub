@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { FeedList, FilterBar, TagSelectModal } from '../components';
+import { ScrapToolbar } from '../components/ScrapToolbar';
 import { feedApi, subscriptionApi } from '../api/client';
 import type { FeedEntry, FeedSortType, User } from '../types';
 
@@ -25,6 +26,8 @@ export function HomePage({ user, onLoginRequired }: HomePageProps) {
   const [followedOnly, setFollowedOnly] = useState(false);
   const [subscriptions, setSubscriptions] = useState<number[]>([]);
 
+  const [selectedFeedIds, setSelectedFeedIds] = useState<Set<number>>(new Set());
+
   // Tag modal state
   const [isTagModalOpen, setIsTagModalOpen] = useState(false);
   const [tagModalFeedId, setTagModalFeedId] = useState<number | null>(null);
@@ -49,6 +52,7 @@ export function HomePage({ user, onLoginRequired }: HomePageProps) {
 
   const fetchInitial = useCallback(async () => {
     setLoading(true);
+    setSelectedFeedIds(new Set());
     setLastId(null);
     setLastPublishedAt(null);
     setLastLikeCount(null);
@@ -177,6 +181,14 @@ export function HomePage({ user, onLoginRequired }: HomePageProps) {
     );
   };
 
+  const handleSelect = (feedId: number) => {
+    setSelectedFeedIds((prev) => {
+      const next = new Set(prev);
+      next.has(feedId) ? next.delete(feedId) : next.add(feedId);
+      return next;
+    });
+  };
+
   const handleLikeToggle = (feedId: number, liked: boolean, likeCount: number) => {
     setFeeds((prev) =>
       prev.map((feed) =>
@@ -245,6 +257,13 @@ export function HomePage({ user, onLoginRequired }: HomePageProps) {
         onLikeToggle={handleLikeToggle}
         onLoginRequired={onLoginRequired}
         isLoggedIn={user !== null}
+        selectedIds={selectedFeedIds}
+        onSelect={handleSelect}
+      />
+
+      <ScrapToolbar
+        selectedFeeds={feeds.filter((f) => selectedFeedIds.has(f.id))}
+        onClearSelection={() => setSelectedFeedIds(new Set())}
       />
 
       {hasMore && (
